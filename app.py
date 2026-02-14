@@ -1,80 +1,64 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, Response, session
-from bson import ObjectId
-# from flask_pymongo import PyMongo # Removed for stability
-import certifi
-
-
-print("RUNNING >>> THIS APP.PY")
-import pytz
 import os
 import logging
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+import traceback
+import certifi
+import pytz
+from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, jsonify, Response, session
 from flask_cors import CORS
 from twilio.rest import Client
 from pymongo import MongoClient
-from datetime import datetime
 from openai import OpenAI
 from dotenv import load_dotenv
-import os
 
 
-# load .env file
+# 1. SETUP & CONFIG
 load_dotenv()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# create flask app
 app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev_secret_key")
 CORS(app)
 
-# Load configuration from environment variables
-# configuration
+# 2. LOAD ENVIRONMENT VARIABLES
+MONGO_URI = os.getenv("MONGO_URI")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/voice_agent_db")
-if "mongodb+srv" in MONGO_URI and "tlsAllowInvalidCertificates" not in MONGO_URI:
-    if "?" in MONGO_URI:
-        MONGO_URI += "&tlsAllowInvalidCertificates=true"
-    else:
-        MONGO_URI += "?tlsAllowInvalidCertificates=true"
 RETELL_WEBHOOK = os.getenv("RETELL_WEBHOOK_URL")
-FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "dev_secret_key")
 
-app.secret_key = FLASK_SECRET_KEY
-app.config["MONGO_URI"] = MONGO_URI
-# initialize mongo
-# Use connect=False and serverSelectionTimeoutMS for robust connection in Vercel
-# TLSV1_ALERT_INTERNAL_ERROR usually means IP Whitelist or SNI mismatch
-try:
-    ca = certifi.where()
-    # Create the client ONCE
-    client = MongoClient(
-        MONGO_URI,
-        tls=True,
-        tlsCAFile=ca,
-        tlsAllowInvalidCertificates=True,
-        connect=False,
-        serverSelectionTimeoutMS=10000,
-        connectTimeoutMS=10000,
-        retryWrites=True,
-        w="majority"
-    )
-    # The 'db' object can now be used everywhere instead of mongo.db
-    db = client.get_database("voice_agent_db")
-except Exception as e:
-    logger.error(f"Failed to setup MongoDB Client: {e}")
+# 3. DATABASE INITIALIZATION
+if not MONGO_URI:
+    if os.getenv("VERCEL"):
+        # Create a "fake" client to avoid crash before user sees debug-env
+        client = None
+        db = None
+    else:
+        MONGO_URI = "mongodb://localhost:27017/voice_agent_db"
 
-if not OPENAI_API_KEY:
-    logger.warning("OPENAI_API_KEY is not set. AI features may not work.")
+if MONGO_URI:
+    try:
+        # Standardize Atlas URI for stability
+        if "mongodb+srv" in MONGO_URI and "tlsAllowInvalidCertificates" not in MONGO_URI:
+            sep = "&" if "?" in MONGO_URI else "?"
+            MONGO_URI += f"{sep}tlsAllowInvalidCertificates=true"
 
+        client = MongoClient(
+            MONGO_URI,
+            tls=True,
+            tlsCAFile=certifi.where(),
+            connect=False,
+            serverSelectionTimeoutMS=5000
+        )
+        # Use the name 'voice_agent_db' or default from URI
+        db = client.get_database()
+    except Exception as e:
+        logger.error(f"MongoDB Init Error: {e}")
+        db = None
+
+# 4. AI & EXTERNAL SERVICES
 client_ai = OpenAI(api_key=OPENAI_API_KEY)
 
 def call_llm(prompt_text, form_data):
@@ -135,20 +119,15 @@ def admin_login():
     return redirect('/login')
 
 
-import traceback
-
 @app.errorhandler(Exception)
 def handle_exception(e):
-    # Pass through HTTP errors
     if hasattr(e, "code") and e.code < 500:
         return e
-    # Handle non-HTTP exceptions only
-    error_info = {
+    return jsonify({
         "error": str(e),
         "traceback": traceback.format_exc(),
         "type": type(e).__name__
-    }
-    return jsonify(error_info), 500
+    }), 500
 
 @app.route("/debug-env")
 def debug_env():
