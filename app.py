@@ -30,33 +30,36 @@ TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 RETELL_WEBHOOK = os.getenv("RETELL_WEBHOOK_URL")
 
 # 3. DATABASE INITIALIZATION
-if not MONGO_URI:
-    if os.getenv("VERCEL"):
-        # Create a "fake" client to avoid crash before user sees debug-env
-        client = None
-        db = None
-    else:
-        MONGO_URI = "mongodb://localhost:27017/voice_agent_db"
-
 if MONGO_URI:
     try:
-        # Standardize Atlas URI for stability
-        if "mongodb+srv" in MONGO_URI and "tlsAllowInvalidCertificates" not in MONGO_URI:
-            sep = "&" if "?" in MONGO_URI else "?"
-            MONGO_URI += f"{sep}tlsAllowInvalidCertificates=true"
-
+        # Clean the URI - remove any accidental spaces or hidden characters
+        MONGO_URI = MONGO_URI.strip()
+        
+        # Vercel needs connect=False for serverless cold-starts
+        # tlsCAFile=certifi.where() is the most reliable way to handle SSL on Vercel
         client = MongoClient(
             MONGO_URI,
             tls=True,
             tlsCAFile=certifi.where(),
             connect=False,
-            serverSelectionTimeoutMS=5000
+            serverSelectionTimeoutMS=10000
         )
-        # Use the name 'voice_agent_db' or default from URI
-        db = client.get_database()
+        
+        # IMPORTANT: Atlas usually needs the DB name explicitly if not in URI
+        db_name = "voice_agent_db"
+        if "/" in MONGO_URI.split("@")[-1]:
+             extracted_db = MONGO_URI.split("@")[-1].split("/")[1].split("?")[0]
+             if extracted_db:
+                 db_name = extracted_db
+        
+        db = client.get_database(db_name)
+        logger.info(f"MongoDB initialized for database: {db_name}")
     except Exception as e:
-        logger.error(f"MongoDB Init Error: {e}")
+        logger.error(f"Critical MongoDB Setup Error: {e}")
         db = None
+else:
+    db = None
+    logger.error("MONGO_URI NOT FOUND IN ENVIRONMENT")
 
 # 4. AI & EXTERNAL SERVICES
 client_ai = OpenAI(api_key=OPENAI_API_KEY)
