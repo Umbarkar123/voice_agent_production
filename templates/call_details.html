@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Call Details</h1>
+</div>
+
+<!-- Top Info Cards -->
+<div class="details-grid">
+
+    <div class="info-card">
+        <h3>Customer Information</h3>
+        <p><b>Name:</b> {{ call.name }}</p>
+        <p><b>Phone:</b> {{ call.phone }}</p>
+        <p><b>Email:</b> {{ call.email }}</p>
+        <p>
+            <b>Status:</b>
+            <span class="badge {{ call.status|lower }}">
+                {{ call.status }}
+            </span>
+        </p>
+    </div>
+
+    <div class="info-card">
+        <h3>Call Metadata</h3>
+        <p><b>Requested Time:</b> {{ call.time }}</p>
+        <p><b>Business:</b> {{ call.business }}</p>
+        <p><b>Service:</b> {{ call.service }}</p>
+        <p><b>Date:</b> {{ call.createdAt }}</p>
+    </div>
+
+</div>
+
+<!-- Conversation Timeline -->
+<div class="timeline-section">
+    <h3>Conversation Timeline</h3>
+
+    <div class="chat-box">
+        {% for msg in call.conversation %}
+            <div class="chat user">
+                <div class="bubble">
+                    <b>User:</b> {{ msg.user }}
+                </div>
+            </div>
+
+            <div class="chat agent">
+                <div class="bubble agent-bubble">
+                    <b>Agent:</b> {{ msg.agent }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Transcript and Summary -->
+<div class="details-grid">
+
+    <div class="info-card">
+        <h3>Full Call Transcript</h3>
+        <div class="transcript">
+            {{ call.call_transcript }}
+        </div>
+    </div>
+
+    <div class="info-card">
+        <h3>AI Call Summary</h3>
+        <div class="summary">
+            {{ call.call_summary }}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

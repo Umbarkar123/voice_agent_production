@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ConnexHub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<!--    <script src="https://kit.fontawesome.com/4b9ba14b0f.js" crossorigin="anonymous"></script>-->
+    <link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+
+<div class="sidebar-header">
+    <span class="logo">⚡</span>
+    <span class="brand">ConnexHub</span>
+</div>
+
+
+
+    <div class="nav-links">
+
+        {% if session.role == "ADMIN" %}
+            <a href="/super-dashboard"><i class="fa fa-chart-line"></i><span>System Dashboard</span></a>
+            <a href="/calls"><i class="fa fa-phone"></i><span>All Calls</span></a>
+            <a href="/admin/calls"><i class="fa fa-users"></i><span>Calls per Client</span></a>
+            <a href="/manage-clients"><i class="fa fa-user-cog"></i><span>Clients</span></a>
+            <a href="/system-analytics"><i class="fa fa-chart-pie"></i><span>Analytics</span></a>
+            <a href="/api-key"><i class="fa fa-key"></i><span>API Key</span></a>
+
+{% elif session.role == "CLIENT" %}
+    <a href="/analytics"><i class="fa fa-chart-bar"></i><span>Dashboard</span></a>
+    <a href="/calls"><i class="fa fa-phone"></i><span>Calls</span></a>
+    <a href="/booking-data"><i class="fa fa-database"></i><span>Booking Details</span></a>
+
+
+    <a href="/client/applications"><i class="fa fa-th-large"></i><span>Applications</span></a>
+<a href="/llm-settings">
+    <i class="fa fa-robot"></i>
+    <span>LLM Settings</span>
+</a>
+        <a href="/integration">🔐 API And Integration</a>
+
+        {% elif session.get('role') == "USER" %}
+            <a href="/request"><i class="fa fa-microphone"></i><span>Request Call</span></a>
+            <a href="/calls"><i class="fa fa-phone"></i><span>Calls</span></a>
+
+        {% endif %}
+
+    </div>
+    <div class="profile-strip" onclick="toggleDiscordCard()">
+    <img src="https://i.pravatar.cc/40" class="ps-avatar">
+    <div class="ps-text">
+        <div class="ps-name">{{ profile.name }}</div>
+        <div class="ps-email">{{ profile.email }}</div>
+    </div>
+</div>
+
+<<div id="discordCard" class="discord-card">
+
+    <div class="dc-cover"></div>
+
+    <div class="dc-content">
+        <img src="https://i.pravatar.cc/90" class="dc-avatar">
+
+        <div class="dc-name">{{ profile.name }}</div>
+        <div class="dc-username">@{{ profile.email.split('@')[0] }}</div>
+
+        <!-- Edit + Status -->
+        <div class="dc-card">
+            <div class="dc-row">
+                <i class="fa fa-pen"></i>
+                Edit Profile
+                <span class="badge">NEW</span>
+            </div>
+            <div class="dc-row">
+                <span class="dot"></span> Online
+            </div>
+        </div>
+
+        <!-- Business Info (expandable) -->
+        <div class="dc-card clickable" onclick="toggleBiz()">
+            <div class="dc-row">
+                <i class="fa fa-briefcase"></i>
+                Business Info
+                <i class="fa fa-chevron-down right"></i>
+            </div>
+
+            <div id="bizBox" class="biz-box">
+                <div><b>Business:</b> {{ profile.business_name }}</div>
+                <div><b>GST:</b> {{ profile.gst }}</div>
+                <div><b>Email:</b> {{ profile.email }}</div>
+                <div><b>Plan:</b> Premium</div>
+            </div>
+        </div>
+
+        <!-- Logout -->
+        <div class="dc-card logout-card">
+            <a href="/logout" class="dc-row logout">
+                <i class="fa fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- ===== SAAS TOP HEADER ===== -->
+<div class="app-header">
+
+
+
+    <div class="app-right">
+
+        <div class="welcome">
+            Welcome, <b>{{ profile.name }}</b>
+        </div>
+
+        <i class="fa fa-bell icon"></i>
+        <i class="fa fa-question-circle icon"></i>
+
+
+<!--    <div class="nav-bottom">-->
+<!--        <a href="/profile"><i class="fa fa-user"></i><span>Profile</span></a>-->
+<!--        <a href="/logout"><i class="fa fa-sign-out-alt"></i><span>Logout</span></a>-->
+<!--    </div>-->
+
+</div>
+<!-- ===== DISCORD STYLE PROFILE (FIXED) ===== -->
+
+<!--        <div class="avatar" onclick="toggleProfile()">-->
+<!--            <img src="https://i.pravatar.cc/40" />-->
+<!--        </div>-->
+
+<!--        <div class="profile-dropdown" id="profileBox">-->
+<!--            <div><b>{{ profile.name }}</b></div>-->
+<!--            <div>{{ profile.email }}</div>-->
+<!--            <hr>-->
+<!--            <a href="/profile">Profile</a>-->
+<!--            <a href="/logout">Logout</a>-->
+<!--        </div>-->
+
+    </div>
+
+</div>
+
+<!-- ✅ TOGGLE BUTTON (CORRECT PLACE) -->
+<div class="sidebar-toggle" onclick="toggleSidebar()">
+    <i class="fa fa-chevron-right"></i>
+</div>
+
+
+<!-- MAIN AREA -->
+<div class="main">
+
+    <!-- TOP HEADER -->
+   <!-- TOP HEADER -->
+<!--<div class="topbar">-->
+
+<!--    <div class="left-title">-->
+<!--        {% block title %}{% endblock %}-->
+<!--    </div>-->
+
+<!--    <div class="right-profile">-->
+<!--        <div class="profile-area" onclick="toggleProfile()">-->
+<!--            <i class="fa fa-user-circle"></i>-->
+
+<!--            <div class="profile-dropdown" id="profileBox">-->
+<!--                <div><b>{{ profile.name }}</b></div>-->
+<!--                <div>{{ profile.email }}</div>-->
+<!--                <div>{{ profile.phone }}</div>-->
+<!--                <hr>-->
+<!--                <a href="/profile">View Profile</a>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--</div>-->
+
+
+    <!-- PAGE CONTENT -->
+  {% block content %}{% endblock %}
+
+</div>
+
+
+<script>
+function toggleDiscordCard(){
+    const c = document.getElementById("discordCard");
+    c.style.display = c.style.display === "block" ? "none" : "block";
+}
+
+function toggleBiz(){
+    const b = document.getElementById("bizBox");
+    b.style.display = b.style.display === "block" ? "none" : "block";
+}
+
+<script>
+function showToast(msg){
+    const toast = document.getElementById("toast");
+    toast.innerText = msg;
+    toast.classList.add("show");
+
+    setTimeout(()=>{
+        toast.classList.remove("show");
+    }, 2500);
+}
+</script>
+
+</script>
+
+
+
+</body>
+</html>
+
+<style>
+    /* ===== SAAS TOP HEADER ===== */
+
+.app-header{
+    position:fixed;
+    top:0;
+    left:240px;
+    right:0;
+    height:50px;
+    background:#0b1720;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    padding:0 28px;
+    border-bottom:1px solid #1e293b;
+    z-index:1000;
+}
+
+.app-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:18px;
+    font-weight:600;
+}
+
+
+
+.app-right{
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
+
+.welcome{
+    font-size:14px;
+    color:#94a3b8;
+}
+
+.icon{
+    font-size:18px;
+    color:#94a3b8;
+    cursor:pointer;
+}
+
+.avatar img{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    cursor:pointer;
+}
+
+/* dropdown */
+.profile-dropdown{
+    position:absolute;
+    top:64px;
+    right:28px;
+    background:#0f172a;
+    border:1px solid #1e293b;
+    padding:12px;
+    border-radius:8px;
+    display:none;
+    width:200px;
+}
+
+.profile-dropdown.show-profile{
+    display:block;
+}
+
+/* push content below header */
+.main{
+    margin-left:240px;
+
+}
+
+.topbar{
+    padding:14px 28px;
+}
+  /* SaaS spacing */
+}
+.page-header{
+    margin-bottom:6px;
+}
+
+
+.content{
+    /* spacing INSIDE pages */
+
+}
+/* ================= PROFILE STRIP (BOTTOM) ================= */
+
+.profile-strip{
+    margin-top:auto;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px;
+    border-radius:10px;
+    background:rgba(255,255,255,0.06);
+    cursor:pointer;
+}
+
+
+.profile-strip:hover{
+    background:rgba(88,101,242,0.18);
+}
+
+.ps-avatar{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+}
+
+.ps-name{
+    color:#fff;
+    font-size:14px;
+    font-weight:600;
+}
+
+.ps-email{
+    color:#9aa4b2;
+    font-size:12px;
+}
+
+
+/* ================= DISCORD PROFILE CARD ================= */
+
+
+.discord-card{
+    position:absolute;
+    left:10px;
+    bottom:110px;
+    width:240px;                 /* increased width */
+    background:#2b2d31;
+    border-radius:14px;
+    box-shadow:0 25px 60px rgba(0,0,0,0.6);
+    overflow:hidden;
+    display:none;
+    font-family:'Segoe UI',sans-serif;
+}
+
+/* top cover */
+.dc-cover{
+    height:70px;
+    background:#5865f2;
+}
+
+.dc-content{
+    padding:12px;
+    position:relative;
+}
+
+.dc-avatar{
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    border:5px solid #2b2d31;
+    position:absolute;
+    top:-26px;
+    left:16px;
+}
+
+.dc-name{
+    margin-top:30px;
+    font-size:16px;
+    font-weight:700;
+    color:#fff;
+}
+
+.dc-username{
+    font-size:12px;
+    color:#b5bac1;
+    margin-bottom:14px;
+}
+
+.dc-card{
+    background:#1e1f22;
+    border-radius:8px;
+    padding:8px;
+    margin-bottom:8px;
+}
+
+.dc-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:#dbdee1;
+}
+
+.clickable{ cursor:pointer; }
+
+.dot{
+    width:9px;
+    height:9px;
+    background:#23a55a;
+    border-radius:50%;
+}
+
+.badge{
+    margin-left:auto;
+    background:#ed4245;
+    color:#fff;
+    font-size:10px;
+    padding:2px 6px;
+    border-radius:10px;
+}
+
+.right{
+    margin-left:auto;
+    font-size:11px;
+    opacity:0.7;
+}
+
+/* business info hidden box */
+.biz-box{
+    margin-top:8px;
+    font-size:12px;
+    color:#b5bac1;
+    display:none;
+    line-height:1.6;
+}
+
+/* logout */
+.logout-card{
+    background:#1e1f22;
+}
+
+.logout{
+    color:#ed4245;
+    text-decoration:none;
+}
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    width:240px;
+    height:100vh;
+    background:#0b1720;
+    border-right:1px solid #1c3344;
+
+    display:flex;
+    flex-direction:column;
+}
+/* Sidebar top brand block */
+.sidebar-header{
+     height:36px;                     /* same as top header */
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 18px;
+    border-bottom:1px solid #1c3344;
+    font-size:18px;
+    font-weight:600;
+    color:#fff;
+
+}
+.sidebar-header .logo{
+    font-size:20px;
+    line-height:1;
+    position:relative;
+    top:-6px;     /* move logo little up */
+}
+
+.sidebar-header .brand{
+    line-height:1;
+}
+/* Menu moves down automatically */
+.nav-links{
+    padding:18px 14px;
+    margin-top:6px;
+}
+.toast{
+    position:fixed;
+    bottom:25px;
+    right:25px;
+    background:#1f8fff;
+    color:white;
+    padding:12px 18px;
+    border-radius:8px;
+    font-size:14px;
+    opacity:0;
+    transform:translateY(20px);
+    transition:all .3s ease;
+    z-index:9999;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+
+</style>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice Agent Admin</title>
+    <style>
+        body{
+            margin:0;
+            font-family:Segoe UI;
+            background:#0f172a;
+            color:white;
+            display:flex;
+        }
+
+        .sidebar{
+            width:220px;
+            background:#0b1220;
+            height:100vh;
+            padding-top:30px;
+            position:fixed;
+        }
+
+        .sidebar h2{
+            text-align:center;
+            margin-bottom:30px;
+            font-size:20px;
+        }
+
+        .sidebar a{
+            display:block;
+            padding:15px 25px;
+            color:#cbd5e1;
+            text-decoration:none;
+        }
+
+        .sidebar a:hover{
+            background:#1e293b;
+        }
+
+        .content{
+            margin-left:220px;
+            padding:30px;
+            width:100%;
+        }
+
+        .cards{
+            display:flex;
+            gap:20px;
+        }
+
+        .card{
+            flex:1;
+            background:#1e293b;
+            padding:25px;
+            border-radius:10px;
+            text-align:center;
+        }
+
+        table{
+            width:100%;
+            margin-top:30px;
+            border-collapse:collapse;
+        }
+
+        th, td{
+            padding:12px;
+            border-bottom:1px solid #334155;
+        }
+
+        th{
+            text-align:left;
+            color:#94a3b8;
+        }
+
+        a.btn{
+            padding:6px 12px;
+            background:#2563eb;
+            color:white;
+            text-decoration:none;
+            border-radius:5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Voice Agent</h2>
+    <a href="/">Dashboard</a>
+    <a href="/calls">Calls</a>
+    <a href="/agents">Agents</a>
+    <a href="/request">Request Call Form</a>
+</div>
+
+<div class="content">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

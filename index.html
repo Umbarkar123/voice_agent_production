@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Support Call Request</title>
+
+<style>
+    body{
+        margin:0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background:#eaf4fb;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        min-height:100vh;
+    }
+
+    .card{
+        width:560px;
+        background:#fff;
+        padding:40px;
+        border-radius:8px;
+        border:1px solid #d6e6f5;
+        box-shadow:0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    h2{
+        text-align:center;
+        color:#0f4c81;
+        margin-bottom:5px;
+    }
+
+    .subtitle{
+        text-align:center;
+        font-size:14px;
+        color:#666;
+        margin-bottom:25px;
+    }
+
+    label{
+        font-weight:600;
+        font-size:14px;
+        display:block;
+        margin-top:10px;
+    }
+
+    input, select, textarea{
+        width:100%;
+        padding:10px;
+        margin-top:6px;
+        border-radius:5px;
+        border:1px solid #cfd9e3;
+        background:#f9fbfd;
+        font-size:14px;
+    }
+
+    textarea{ height:80px; resize:none; }
+
+    .phone-row{
+        display:flex;
+        gap:10px;
+    }
+
+    .phone-row select{
+        width:30%;
+    }
+
+    .phone-row input{
+        width:70%;
+    }
+
+    button{
+        margin-top:18px;
+        width:100%;
+        padding:12px;
+        background:#0f4c81;
+        color:white;
+        border:none;
+        border-radius:5px;
+        font-size:16px;
+        cursor:pointer;
+    }
+
+    button:hover{
+        background:#09375c;
+    }
+
+    .note{
+        margin-top:15px;
+        font-size:12px;
+        color:#777;
+        text-align:center;
+    }
+
+    .success{
+        display:none;
+        color:green;
+        text-align:center;
+        margin-top:15px;
+        font-weight:600;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>Request a Support Call</h2>
+    <div class="subtitle">Our support team will contact you shortly to assist with your request.</div>
+
+    <form id="form">
+
+        <label>Full Name</label>
+        <input type="text" id="name" required>
+
+        <label>Email Address</label>
+        <input type="email" id="email" required>
+
+        <label>Phone Number</label>
+        <div class="phone-row">
+            <select id="code">
+                <option value="+91">+91 (India)</option>
+                <option value="+1">+1 (US)</option>
+                <option value="+44">+44 (UK)</option>
+                <option value="+61">+61 (AU)</option>
+            </select>
+            <input type="text" id="phone" placeholder="Enter phone number" required>
+        </div>
+
+        <label>Business Type</label>
+        <select id="business">
+            <option>Restaurant</option>
+            <option>Hotel</option>
+            <option>Cafe</option>
+            <option>Bakery</option>
+            <option>Salon / Spa</option>
+            <option>Clinic / Hospital</option>
+            <option>Retail Shop</option>
+            <option>E-commerce</option>
+            <option>General Complaint</option>
+        </select>
+
+        <label>Service Required</label>
+        <select id="service">
+            <option>Booking / Reservation</option>
+            <option>Order Placement</option>
+            <option>Inquiry</option>
+            <option>Complaint</option>
+            <option>Information Request</option>
+        </select>
+
+        <label>Your Query / Requirement</label>
+        <textarea id="query" placeholder="Briefly describe your request..."></textarea>
+
+        <label>Preferred Call Time</label>
+        <input type="time" id="time">
+
+        <button type="submit">Request Call</button>
+
+        <div class="success" id="msg">
+            ✅ Request submitted successfully. You will receive a call soon.
+        </div>
+
+    </form>
+
+    <div class="note">
+        Your information is kept confidential and used only for customer support purposes.
+    </div>
+</div>
+
+<script>
+document.getElementById("form").addEventListener("submit", async function(e){
+    e.preventDefault();
+
+    const data = {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("code").value + document.getElementById("phone").value,
+        business: document.getElementById("business").value,
+        service: document.getElementById("service").value,
+        query: document.getElementById("query").value,
+        time: document.getElementById("time").value
+    };
+
+    try {
+        const response = await fetch("http://127.0.0.1:5000/request-call", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        console.log(result);
+
+        document.getElementById("msg").style.display = "block";
+        document.getElementById("form").reset();
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Request failed. Check console.");
+    }
+});
+</script>
+
+</body>
+</html>

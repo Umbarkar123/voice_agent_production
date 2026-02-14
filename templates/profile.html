@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Client Profile</h1>
+    <p style="color:#9aa4b2">Manage your account details</p>
+</div>
+
+<div class="card profile-box">
+
+    <h2>Profile Information</h2>
+
+    <form method="POST">
+
+        <div class="profile-row">
+            <label>Full Name</label>
+            <input type="text" name="name" value="{{ data.name }}">
+        </div>
+
+        <div class="profile-row">
+            <label>Email Address</label>
+            <input type="email" value="{{ data.email }}" disabled>
+        </div>
+
+        <div class="profile-row">
+            <label>Role</label>
+            <input type="text" value="{{ role }}" disabled>
+        </div>
+
+        <button type="submit" class="save-btn">Save Changes</button>
+
+    </form>
+
+</div>
+
+<style>
+
+/* SAME COLOR AS YOUR DASHBOARD */
+
+.profile-box{
+    max-width:600px;
+    margin-top:25px;
+}
+
+/* Proper spacing */
+.profile-row{
+    display:flex;
+    flex-direction:column;
+    margin-bottom:18px;
+}
+
+.profile-row label{
+    font-size:13px;
+    margin-bottom:6px;
+    color:#9aa4b2;
+}
+
+/* Inputs same style as rest of app */
+.profile-row input{
+    padding:11px 12px;
+    border-radius:6px;
+    border:1px solid #2d3748;
+    background:#0f1722;
+    color:white;
+    font-size:14px;
+    width:95%;
+}
+
+.profile-row input:focus{
+    border:1px solid #facc15;
+    outline:none;
+}
+
+/* Button same as your buttons */
+.save-btn{
+    margin-top:12px;
+    padding:8px 16px;
+    background:#3a2d0a;
+    color:#ffcc66;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:500;
+    border:none;
+    cursor:pointer;
+}
+
+.save-btn:hover{
+    background:#facc15;
+    color:black;
+}
+
+</style>
+
+{% endblock %}

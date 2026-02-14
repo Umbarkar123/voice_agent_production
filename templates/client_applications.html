@@ -1,0 +1,227 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2 class="page-title">Applications</h2>
+
+<!-- TOPBAR -->
+<div class="apps-topbar">
+    <input class="search" placeholder="Search applications...">
+
+    <select class="select">
+        <option>Status: All</option>
+        <option>Live</option>
+        <option>Draft</option>
+        <option>Paused</option>
+        <option>Archived</option>
+    </select>
+
+    <select class="select">
+        <option>Sort: Recent</option>
+        <option>Name</option>
+        <option>Most Submissions</option>
+    </select>
+
+    <button class="create-btn" onclick="createApp()">+ Create Application</button>
+</div>
+
+<!-- GRID -->
+<div class="apps-grid">
+
+<!-- 🔹 DEFAULT APPS (string list) -->
+{% for app in default_apps %}
+<div class="app-card">
+    <div class="card-head">
+        <h3>{{ app }}</h3>
+        <span class="status">Live</span>
+    </div>
+
+    <div class="card-meta">
+        <span>0 submissions</span>
+        <span>Updated today</span>
+    </div>
+
+    <div class="card-actions">
+        <a href="/client/application/{{app}}/dashboard" class="primary">Dashboard</a>
+        <a href="/client/application/{{app}}/open" class="secondary">Open Form</a>
+        <div class="more">⋮</div>
+    </div>
+</div>
+{% endfor %}
+
+
+<!-- 🔹 CLIENT APPS (object list) -->
+{% for app in client_apps %}
+<div class="app-card">
+    <div class="card-head">
+        <h3>{{ app.app_name }}</h3>
+        <span class="status">Live</span>
+    </div>
+
+    <div class="card-meta">
+        <span>{{ app.submissions or 0 }} submissions</span>
+        <span>
+            {{ app.created_at.strftime("%d %b") if app.created_at else "Recently" }}
+        </span>
+    </div>
+
+    <div class="card-actions">
+        <a href="/client/application/{{app.app_name}}/dashboard" class="primary">Dashboard</a>
+        <a href="/client/application/{{app.app_name}}/open" class="secondary">Open Form</a>
+        <div class="more">⋮</div>
+    </div>
+</div>
+{% endfor %}
+
+</div>
+
+
+<style>
+
+/* Title */
+.page-title{
+    margin:0 0 14px 0;
+    font-size:22px;
+    font-weight:600;
+}
+
+/* Topbar */
+.apps-topbar{
+    display:flex;
+    gap:12px;
+    margin:12px 0 20px 0;
+}
+
+.search,.select{
+    height:36px;
+    border-radius:6px;
+    border:1px solid #1c3344;
+    background:#0f2230;
+    color:#cfe3f5;
+    padding:0 12px;
+    font-size:13px;
+}
+
+.search{flex:1}
+
+.create-btn{
+    height:36px;
+    padding:0 16px;
+    border:none;
+    border-radius:6px;
+    background:#1f8fff;
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+}
+
+/* Grid */
+.apps-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:16px;
+}
+
+/* Card */
+.app-card{
+    background:#0f2230;
+    border:1px solid #1c3344;
+    border-radius:10px;
+    padding:16px;
+    transition:.2s;
+}
+
+.app-card:hover{
+    transform:translateY(-3px);
+}
+
+/* Head */
+.card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.card-head h3{
+    margin:0;
+    font-size:15px;
+    font-weight:600;
+}
+
+.status{
+    font-size:12px;
+    color:#00c776;
+    font-weight:600;
+}
+
+/* Meta */
+.card-meta{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:#8fa6bc;
+    margin-bottom:16px;
+}
+
+/* Actions */
+.card-actions{
+    display:flex;
+    align-items:center;
+}
+
+/* Buttons */
+.card-actions a{
+    height:32px;
+    padding:0 14px;
+    border-radius:6px;
+    font-size:13px;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* Primary */
+.card-actions a.primary{
+    background:#1f8fff;
+    color:white;
+}
+
+/* Secondary */
+.card-actions a.secondary{
+    background:#132b3a;
+    border:1px solid #1c3344;
+    color:#cfe3f5;
+    margin-left:8px;
+}
+
+.card-actions a.secondary:hover{
+    background:#1f8fff;
+    color:white;
+}
+
+/* More icon */
+.more{
+    margin-left:auto;
+    font-size:18px;
+    color:#8fa6bc;
+    cursor:pointer;
+}
+
+</style>
+
+
+<script>
+function createApp(){
+    const name = prompt("Enter Application Name:");
+    if(!name) return;
+
+    fetch("/client/create_application",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({app_name:name})
+    }).then(()=>location.reload());
+}
+</script>
+
+{% endblock %}

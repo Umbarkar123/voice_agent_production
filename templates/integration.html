@@ -1,0 +1,256 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="page-header">
+    <h1>API & Integration</h1>
+    <div class="sub">Use API key and HTML form to integrate into your website</div>
+</div>
+
+{% for app in apps %}
+<div class="integration-card">
+
+    <div class="integration-top">
+        <div>
+            <h3>{{ app.app_name }}</h3>
+            <span class="badge">Live</span>
+        </div>
+
+        <a href="/download-html/{{app_name}}" class="action-btn">
+    Download HTML
+</a>
+ </div>
+
+    <!-- API KEY -->
+    <div class="api-box">
+        <label>API Key</label>
+
+        <div class="api-key-row">
+            <input value="{{ app.api_key }}" readonly>
+
+            <button class="btn-copy">Copy</button>
+            <button class="btn-regen">Regenerate</button>
+            <button class="btn-revoke">Revoke</button>
+        </div>
+    </div>
+
+    <!-- HTML FORM -->
+    <div class="html-box">
+        <label>Ready-to-use HTML Form</label>
+
+        <textarea readonly>
+<form action="http://127.0.0.1:5000/api/submit/{{ app.api_key }}" method="POST">
+
+{% for f in app.fields %}
+<label>{{ f.label }}</label>
+<input name="{{ f.name }}" placeholder="{{ f.label }}">
+<br><br>
+{% endfor %}
+
+<button type="submit">Submit</button>
+</form>
+        </textarea>
+
+        <button class="copy-code">Copy Code</button>
+    </div>
+
+</div>
+{% endfor %}
+
+
+
+<style>
+/* ---------- PAGE HEADER ---------- */
+.page-header{
+    margin-bottom: 18px;
+}
+.page-header h1{
+    font-size: 24px;
+    font-weight: 600;
+    color: #e5e7eb;
+}
+.sub{
+    color:#94a3b8;
+    font-size:14px;
+    margin-top:4px;
+}
+
+
+/* ---------- CARD ---------- */
+.integration-card{
+    background:#0b1220;
+    border:1px solid #1f2a3a;
+    border-radius:10px;
+    padding:18px;
+    margin-bottom:18px;
+    transition:0.2s;
+}
+
+.integration-card:hover{
+    border-color:#334155;
+}
+
+
+/* ---------- TOP ---------- */
+.integration-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+}
+
+.integration-top h3{
+    font-size:18px;
+    font-weight:600;
+    color:#e2e8f0;
+}
+
+/* badge */
+.badge{
+    background:#1e293b;
+    padding:3px 10px;
+    border-radius:5px;
+    font-size:11px;
+    color:#cbd5f5;
+    margin-left:10px;
+}
+
+/* download button */
+.download-btn{
+    background:#3b82f6;
+    color:white;
+    border:none;
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:13px;
+    cursor:pointer;
+}
+
+.download-btn:hover{
+    background:#2563eb;
+}
+
+
+/* ---------- LABEL ---------- */
+.api-box label,
+.html-box label{
+    font-size:13px;
+    color:#9aa4b2;
+    margin-bottom:6px;
+    display:block;
+}
+
+
+/* ---------- API KEY ROW ---------- */
+.api-key-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:12px;
+}
+
+.api-key-row input{
+    flex:1;
+    background:#020617;
+    border:1px solid #1f2a3a;
+    color:#e5e7eb;
+    padding:8px 10px;
+    border-radius:6px;
+    font-size:13px;
+}
+
+/* buttons */
+.api-key-row button{
+    border:none;
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:12px;
+    cursor:pointer;
+    font-weight:500;
+}
+
+/* button colors */
+.btn-copy{ background:#22c55e; color:white; }
+.btn-regen{ background:#f59e0b; color:white; }
+.btn-revoke{ background:#ef4444; color:white; }
+
+.btn-copy:hover{ background:#16a34a; }
+.btn-regen:hover{ background:#d97706; }
+.btn-revoke:hover{ background:#dc2626; }
+
+
+/* ---------- HTML CODE ---------- */
+.html-box textarea{
+    width:100%;
+    height:170px;
+    background:#020617;
+    border:1px solid #1f2a3a;
+    color:#e2e8f0;
+    padding:10px;
+    border-radius:6px;
+    font-family: monospace;
+    font-size:12px;
+    resize:none;
+    line-height:1.5;
+}
+
+/* copy code button */
+.copy-code{
+    margin-top:8px;
+    background:#eab308;
+    color:black;
+    border:none;
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:12px;
+    cursor:pointer;
+}
+
+.copy-code:hover{
+    background:#ca8a04;
+}
+ </style>
+
+<script>
+
+function copyApi(app){
+    let val = document.getElementById("api_"+app).value;
+    navigator.clipboard.writeText(val);
+    alert("API key copied");
+}
+
+function copyHTML(app){
+    let val = document.getElementById("html_"+app).value;
+    navigator.clipboard.writeText(val);
+    alert("HTML copied");
+}
+
+function downloadHTML(app){
+    let text = document.getElementById("html_"+app).value;
+    let blob = new Blob([text], {type:"text/html"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = app + "_form.html";
+    a.click();
+}
+
+function regenerateKey(app){
+    fetch("/regen_key/"+app)
+    .then(res=>res.json())
+    .then(d=>{
+        alert("New API Key Generated");
+        location.reload();
+    })
+}
+
+function revokeKey(app){
+    fetch("/revoke_key/"+app)
+    .then(res=>res.json())
+    .then(d=>{
+        alert("API Key Revoked");
+        location.reload();
+    })
+}
+
+</script>
+
+
+{% endblock %}

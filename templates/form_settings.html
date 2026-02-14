@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Form Builder</h1>
+</div>
+
+<div class="card">
+
+    <form method="POST" style="margin-bottom:25px;">
+        <input name="label" placeholder="Field Label" required>
+
+        <select name="type">
+            <option value="text">Text</option>
+            <option value="number">Number</option>
+            <option value="textarea">Textarea</option>
+        </select>
+
+        <label>
+            <input type="checkbox" name="required"> Required
+        </label>
+
+        <button class="save-btn">Add Field</button>
+    </form>
+
+    <table class="calls-table">
+        <tr>
+            <th>Label</th>
+            <th>Type</th>
+            <th>Required</th>
+        </tr>
+        {% for f in fields %}
+        <tr>
+            <td>{{ f.label }}</td>
+            <td>{{ f.type }}</td>
+            <td>{{ "Yes" if f.required else "No" }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+{% endblock %}

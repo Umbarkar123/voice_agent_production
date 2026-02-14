@@ -1,0 +1,433 @@
+
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="llm-wrapper">
+
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb">
+        Applications &nbsp;|&nbsp; <span>LLM Settings</span>
+    </div>
+
+    <!-- TITLE ROW -->
+    <div class="llm-title-row">
+        <div>
+            <h1>LLM Settings</h1>
+            <p>Configure your custom prompts for AI call agents per application</p>
+        </div>
+
+       <div style="display:flex; align-items:center; gap:12px;">
+</div>
+    <!-- SELECT APPLICATION DROPDOWN -->
+    <select id="appSelect"
+            onchange="selectAppFromDropdown()"
+            style="padding:8px; border-radius:6px; width:180px; background:#0f2532; color:#fff; border:1px solid #1c3344;">
+        <option value="">Select App</option>
+
+        {% for app in applications %}
+            <option value="{{ app['app_name'] }}">{{ app['app_name'] }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- CREATE BUTTON -->
+    <button class="create-app-btn" onclick="createApp()">+ Create Application</button>
+
+    <!-- TOGGLE -->
+    <div class="toggle-area">
+        <label>Enable LLM Agent</label>
+        <input type="checkbox" id="enableToggle">
+    </div>
+
+</div>
+
+
+    <!-- APPLICATION TABS -->
+    <div class="app-tabs">
+    {% for app in client_apps %}
+        <div class="tab {% if loop.first %}active{% endif %}"
+             id="tab-{{app.app_name}}"
+             onclick="selectApp('{{app.app_name}}')">
+            {{ app.app_name }}
+        </div>
+    {% endfor %}
+    </div>
+
+
+    <!-- PROMPT SECTION -->
+    <div class="prompt-section">
+
+        <!-- LEFT CARD -->
+        <div class="prompt-card">
+            <h3>Default Behavior Prompt</h3>
+
+            <textarea id="defaultPrompt" class="prompt-box readonly" readonly>
+You are a helpful, polite booking assistant. Ask the user for necessary booking information such as date, time, number of people, name and contact details. Ask one question at a time and confirm details before ending the conversation.
+            </textarea>
+
+            <div class="json-link">View JSON Response Example ></div>
+        </div>
+
+        <!-- RIGHT CARD -->
+        <div class="prompt-card">
+
+            <div class="card-head">
+                <h3>Application Specific Prompt</h3>
+                <span class="reset" onclick="resetPrompt()">Reset to Default</span>
+            </div>
+
+            <textarea id="customPrompt" class="prompt-box edit"
+                      placeholder="Write how AI should talk for this application..."></textarea>
+
+            <div class="card-footer">
+                <div class="json-link">View JSON Response Example ></div>
+                <!-- FIXED BUTTON -->
+                <button class="update-btn" onclick="updatePrompt()">Update Prompt</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+
+let selectedApp = "{{ client_apps[0].app_name if client_apps else '' }}";
+
+function createApp(){
+    const name = prompt("Enter Application Name:");
+    if(!name) return;
+
+    fetch("/client/create_application",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ app_name: name })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        if(data.status === "created"){
+            alert("Application Created");
+            location.reload();
+        }else{
+            alert(data.error || "Error creating app");
+        }
+    })
+}
+
+function selectApp(app){
+    selectedApp = app;
+
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    document.getElementById("tab-"+app).classList.add("active");
+
+    loadPrompt(app);
+}
+
+function loadPrompt(app){
+    fetch("/llm/get/"+app)
+    .then(res=>res.json())
+    .then(data=>{
+        document.getElementById("defaultPrompt").value = data.default_prompt || "";
+        document.getElementById("customPrompt").value = data.custom_prompt || "";
+        document.getElementById("enableToggle").checked = data.enabled || false;
+    });
+}
+
+function resetPrompt(){
+    document.getElementById("customPrompt").value =
+        document.getElementById("defaultPrompt").value;
+}
+
+window.onload = function(){
+    if(selectedApp){
+        loadPrompt(selectedApp);
+    }
+}
+
+function updatePrompt(){
+    const app = document.getElementById("appSelect").value;
+    const customPrompt = document.getElementById("customPrompt").value;
+
+    if(!app){
+        alert("Please select application");
+        return;
+    }
+
+    fetch("/update-llm-prompt", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            app_name: app,
+            custom_prompt: customPrompt
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert("Prompt saved permanently");
+
+        // 👇 ALSO UPDATE DEFAULT BOX IMMEDIATELY
+        document.getElementById("defaultPrompt").value = customPrompt;
+    });
+}
+
+function selectAppFromDropdown(){
+    const app = document.getElementById("appSelect").value;
+    if(!app) return;
+
+    selectedApp = app;
+
+    fetch("/get-llm-prompt/" + app)
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("customPrompt").value = data.custom_prompt || "";
+        document.getElementById("defaultPrompt").value = data.default_prompt || "";
+    });
+}
+
+
+</script>
+
+
+
+<!-- ================= CSS ================= -->
+<style>
+/* ========== WRAPPER ========== */
+.llm-wrapper{
+    padding:32px 42px;
+    color:#e6edf3;
+    font-family:'Segoe UI',sans-serif;
+    max-width:1400px;
+    margin:auto;
+}
+
+/* ========== BREADCRUMB ========== */
+.breadcrumb{
+    font-size:13px;
+    color:#8aa0b5;
+    margin-bottom:18px;
+}
+
+/* ========== TITLE ROW ========== */
+.llm-title-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:28px;
+}
+.llm-title-row h1{
+    margin:0;
+    font-size:28px;
+    font-weight:600;
+    letter-spacing:.2px;
+}
+.llm-title-row p{
+    margin-top:6px;
+    color:#8aa0b5;
+    font-size:14px;
+}
+
+/* ========== TOGGLE SWITCH (PRO STYLE) ========== */
+.toggle-area{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-size:14px;
+}
+
+.toggle-area input{
+    appearance:none;
+    width:46px;
+    height:24px;
+    background:#1c3344;
+    border-radius:20px;
+    position:relative;
+    cursor:pointer;
+    outline:none;
+    transition:.3s;
+}
+
+.toggle-area input:checked{
+    background:#1f8fff;
+}
+
+.toggle-area input::before{
+    content:"";
+    width:18px;
+    height:18px;
+    background:white;
+    border-radius:50%;
+    position:absolute;
+    top:3px;
+    left:3px;
+    transition:.3s;
+}
+
+.toggle-area input:checked::before{
+    left:24px;
+}
+
+/* ========== APP TABS ========== */
+.app-tabs{
+    display:flex;
+    gap:12px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+}
+
+.tab{
+    padding:10px 18px;
+    border-radius:8px;
+    border:1px solid #1c3344;
+    background:#0f2532;
+    cursor:pointer;
+    font-size:13px;
+    min-width:110px;
+    text-align:center;
+    transition:.2s ease;
+}
+
+.tab:hover{
+    border-color:#1f8fff;
+    background:#122c3d;
+}
+
+.tab.active{
+    border:1px solid #1f8fff;
+    background:linear-gradient(180deg,#0f2532,#122c3d);
+    box-shadow:0 0 0 1px #1f8fff inset;
+}
+
+/* ========== PROMPT GRID ========== */
+.prompt-section{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+}
+
+/* ========== CARDS ========== */
+.prompt-card{
+    background:#0f2230;
+    border:1px solid #1c3344;
+    border-radius:14px;
+    padding:22px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.25);
+    transition:.2s ease;
+}
+
+.prompt-card:hover{
+    transform:translateY(-3px);
+}
+
+/* ========== CARD HEADER ========== */
+.card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.prompt-card h3{
+    margin:0 0 12px 0;
+    font-size:15px;
+    font-weight:600;
+}
+
+/* ========== TEXTAREA ========== */
+.prompt-box{
+    width:94%;
+    height:210px;
+    background:#08131c;
+    border:1px solid #1c3344;
+    border-radius:10px;
+    padding:14px;
+    font-family:monospace;
+    font-size:13px;
+    color:#cfe3f5;
+    resize:none;
+    transition:.2s;
+}
+
+.prompt-box:focus{
+    outline:none;
+    border-color:#1f8fff;
+    box-shadow:0 0 0 1px #1f8fff inset;
+}
+
+/* ========== LINKS ========== */
+.json-link{
+    margin-top:12px;
+    color:#1f8fff;
+    font-size:13px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.json-link:hover{
+    text-decoration:underline;
+}
+
+/* ========== RESET TEXT ========== */
+.reset{
+    font-size:13px;
+    color:#8aa0b5;
+    cursor:pointer;
+    transition:.2s;
+}
+.reset:hover{
+    color:#1f8fff;
+}
+
+/* ========== FOOTER ========== */
+.card-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:14px;
+}
+
+/* ========== BUTTON ========== */
+.update-btn{
+    background:linear-gradient(135deg,#1f8fff,#2da2ff);
+    border:none;
+    padding:9px 18px;
+    border-radius:8px;
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s ease;
+    box-shadow:0 4px 12px rgba(31,143,255,0.3);
+}
+
+.update-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 6px 16px rgba(31,143,255,0.45);
+}
+
+/* ========== RESPONSIVE ========== */
+@media(max-width:900px){
+    .prompt-section{
+        grid-template-columns:1fr;
+    }
+}
+.create-app-btn{
+    background:linear-gradient(135deg,#1f8fff,#2da2ff);
+    border:none;
+    padding:8px 16px;
+    border-radius:8px;
+    color:white;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    transition:.2s;
+    box-shadow:0 4px 12px rgba(31,143,255,0.3);
+}
+
+.create-app-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 6px 16px rgba(31,143,255,0.45);
+}
+
+</style>
+
+{% endblock %}

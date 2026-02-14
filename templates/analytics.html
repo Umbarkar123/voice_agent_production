@@ -1,0 +1,349 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="ana-wrap">
+
+    <!-- HEADER -->
+    <div class="ana-header">
+        <div>
+            <h1>Client Form Management Portal</h1>
+            <p>Manage, review and approve user form submissions</p>
+
+        </div>
+        <button class="ana-export" onclick="exportTable()">Export CSV</button>
+    </div>
+
+
+    <!-- KPI ROW -->
+    <div class="ana-kpi-row">
+        <div class="ana-kpi">
+            <span>Total Forms</span>
+            <h2>{{ total }}</h2>
+        </div>
+        <div class="ana-kpi">
+            <span>Approved</span>
+            <h2>{{ confirmed }}</h2>
+        </div>
+        <div class="ana-kpi">
+            <span>Pending</span>
+            <h2>{{ pending }}</h2>
+        </div>
+        <div class="ana-kpi">
+            <span>Rejected</span>
+            <h2>{{ cancelled }}</h2>
+        </div>
+    </div>
+    <div class="info-card">
+    <div class="info-left">
+        <span>📋 Forms Today: <b>{{ total }}</b></span>
+        <span>⏳ Pending Review: <b>{{ pending }}</b></span>
+        <span>✅ Approved: <b>{{ confirmed }}</b></span>
+        <span>❌ Rejected: <b>{{ cancelled }}</b></span>
+    </div>
+
+    <div class="info-right">
+        Last updated: just now
+    </div>
+</div>
+
+    <!-- TABLE CARD -->
+    <div class="ana-card">
+        <div class="ana-card-head">
+            <h3>User Form Requests</h3>
+
+        </div>
+
+        <table class="ana-table" id="dataTable">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Phone</th>
+                    <th>Query</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for call in recent %}
+                <tr>
+                    <td>{{ call.name }}</td>
+                    <td>{{ call.phone }}</td>
+                    <td>{{ call.query }}</td>
+                    <td>{{ call.time }}</td>
+                    <td>
+                        <span class="ana-status {{ call.status }}">
+                            {{ call.status }}
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+
+if (searchInput && statusFilter) {
+    searchInput.addEventListener("keyup", filterTable);
+    statusFilter.addEventListener("change", filterTable);
+}
+
+function filterTable(){
+    let search = searchInput.value.toLowerCase();
+    let status = statusFilter.value;
+
+    document.querySelectorAll("#dataTable tbody tr").forEach(row=>{
+        let text = row.innerText.toLowerCase();
+        let rowStatus = row.className;
+
+        row.style.display =
+            text.includes(search) &&
+            (status==="" || rowStatus===status)
+            ? "" : "none";
+    });
+}
+
+function exportTable(){
+    let csv = [];
+    document.querySelectorAll("table tr").forEach(row=>{
+        let cols = row.querySelectorAll("td, th");
+        let data = Array.from(cols).map(c=>c.innerText).join(",");
+        csv.push(data);
+    });
+
+    let blob = new Blob([csv.join("\n")], {type: "text/csv"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "forms.csv";
+    a.click();
+}
+</script>
+
+<style>/* ===== ANALYTICS CLEAN SAAS ===== */
+
+.ana-wrap{
+    padding:32px 36px;
+    color:#e5e7eb;
+    font-family:'Segoe UI',sans-serif;
+}
+
+/* HEADER */
+.ana-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:28px;
+}
+.ana-header h1{
+    font-size:24px;
+    font-weight:600;
+}
+.ana-header p{
+    font-size:14px;
+    color:#94a3b8;
+    margin-top:4px;
+}
+
+.ana-export{
+    background:#0f2532;
+    border:1px solid #243447;
+    padding:8px 16px;
+    border-radius:8px;
+    color:white;
+    cursor:pointer;
+}
+
+/* KPI */
+.ana-kpi-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:18px;
+    margin-bottom:30px;
+}
+.ana-kpi{
+    background:#0f2532;
+    border:1px solid #1f3447;
+    border-radius:12px;
+    padding:22px;
+}
+.ana-kpi span{
+    font-size:13px;
+    color:#94a3b8;
+}
+.ana-kpi h2{
+    font-size:30px;
+    margin-top:6px;
+    font-weight:600;
+}
+
+/* CARD */
+.ana-card{
+    background:#0f2532;
+    border:1px solid #1f3447;
+    border-radius:14px;
+    padding:22px;
+}
+
+/* CARD HEAD */
+.ana-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+}
+.ana-card-head h3{
+    font-size:17px;
+    font-weight:600;
+}
+.ana-card-head span{
+    font-size:13px;
+    color:#94a3b8;
+}
+
+/* TABLE */
+.ana-table{
+    width:100%;
+    border-collapse:collapse;
+}
+.ana-table th,
+.ana-table td{
+    padding:14px 10px;
+    border-bottom:1px solid #223548;
+    font-size:13px;
+}
+.ana-table thead{
+    background:#0b1e2a;
+}
+
+/* STATUS */
+.ana-status{
+    padding:5px 12px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:600;
+}
+.ana-status.PENDING{background:#facc15;color:black;}
+.ana-status.APPROVED{background:#22c55e;}
+.ana-status.REJECTED{background:#ef4444;}
+
+.kpi{
+    background:#0f2532;
+    border:1px solid #1f3447;
+    border-radius:12px;
+
+    padding:12px 14px;     /* ⬅️ reduced */
+    height:50px;           /* ⬅️ reduced height */
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+.kpi h3{
+    font-size:13px;
+    font-weight:600;
+    color:#94a3b8;
+    margin-bottom:6px;
+}
+
+.kpi p{
+    font-size:26px;
+    font-weight:700;
+    color:#fff;
+}
+.summary-strip{
+    margin:18px 0 26px 0;      /* ⬅️ perfect vertical gap */
+
+    display:flex;
+    align-items:center;
+    gap:28px;
+
+    padding:10px 18px;         /* slim height */
+    font-size:13px;
+
+    background:#0b1f2a;
+    border:1px solid #1e3446;
+    border-radius:10px;
+
+    color:#cbd5e1;
+}
+
+.summary-strip div{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    white-space:nowrap;
+}
+/* THE SPECIAL BOX BETWEEN CARDS AND TABLE */
+.info-card{
+    margin:18px 0 26px 0;
+
+    background:linear-gradient(180deg,#0f2532,#0b1f2a);
+    border:1px solid #1f3647;
+    border-radius:12px;
+
+    padding:12px 20px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    color:#cbd5e1;
+    font-size:13px;
+}
+
+/* left items */
+.info-left{
+    display:flex;
+    gap:32px;
+    align-items:center;
+}
+
+/* right text */
+.info-right{
+    color:#94a3b8;
+    font-size:12px;
+}
+
+/* ===== FORCE SMALL KPI CARDS (OVERRIDE) ===== */
+/* ===== ULTRA COMPACT KPI CARDS ===== */
+
+.kpi-container{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:12px;
+    margin-bottom:14px;
+}
+
+.kpi{
+    background:#0f2532;
+    border:1px solid #1e3a4c;
+    border-radius:8px;
+    padding:8px 12px;      /* 🔥 reduced */
+    height:60px;           /* 🔥 reduced height */
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+.kpi h3{
+    font-size:11px;        /* 🔥 smaller title */
+    color:#8aa4b5;
+    margin:0;
+    font-weight:500;
+}
+
+.kpi p{
+    font-size:18px;        /* 🔥 smaller number */
+    margin:2px 0 0 0;
+    font-weight:600;
+    color:white;
+}
+
+</style>
+
+{% endblock %}

@@ -1,0 +1,576 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="fb-page">
+
+<style>
+.fb-page .helper{
+    font-size:14px;
+    opacity:.6;
+    margin-bottom:14px;
+}
+
+/* ========== PAGE ISOLATION ========== */
+.fb-page{
+    max-width:1400px;
+    margin:0 auto;
+    color:#cfe3f5;
+    font-family:'Segoe UI',sans-serif;
+}
+
+/* ========== GRID ========== */
+.fb-page .builder-layout{
+    display:grid;
+    grid-template-columns:280px 1fr 360px;
+    gap:24px;
+    margin-top:18px;
+}
+
+/* ========== HEADER ========== */
+.fb-page .builder-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#0f2230;
+    padding:14px 18px;
+    border-radius:12px;
+    border:1px solid #1c3344;
+    margin-bottom:16px;
+}
+.fb-page .builder-actions button{
+    height:35px;
+    padding:0 16px;
+    border-radius:8px;
+    border:1px solid #1f3a4f;
+    background:#132b3a;
+    color:#cfe3f5;
+    margin-left:8px;
+    cursor:pointer;
+}
+.fb-page .builder-actions .save{
+    background:#1f8fff;
+    color:white;
+    font-weight:600;
+}
+
+/* ========== CARDS ========== */
+.fb-page .card{
+    background:#0f2230;
+    border:1px solid #1f3a4f;
+    border-radius:14px;
+    padding:24px;
+    min-height:640px;
+    max-height:620px;
+    overflow:auto;
+}
+
+/* ========== LEFT PANEL ========== */
+.fb-page .tabs{
+    display:flex;
+    gap:8px;
+    margin:12px 0;
+}
+.fb-page .tabs span{
+    padding:6px 12px;
+    border-radius:20px;
+    background:#132b3a;
+    font-size:12px;
+}
+.fb-page .tabs .active{
+    background:#1f8fff;
+    color:white;
+}
+
+.fb-page .elements-search{
+    width:90%;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #1f3a4f;
+    background:#0b1720;
+    margin-bottom:14px;
+    color:white;
+}
+
+.fb-page .field-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid #1f3a4f;
+    margin-bottom:10px;
+    background:#132b3a;
+    cursor:pointer;
+    transition:.2s;
+}
+.fb-page .field-item:hover{
+    background:#162f42;
+}
+
+/* ========== CENTER ========== */
+.fb-page .helper{
+    opacity:.6;
+    margin-bottom:10px;
+}
+
+.fb-page .form-field{
+    background: linear-gradient(145deg,#102a3a,#0c1f2b);
+    border: 1px solid #1f3a4f;
+    border-radius:14px;
+    padding:18px 18px 20px 18px;
+    margin-bottom:18px;
+    position:relative;
+    box-shadow:0 8px 25px rgba(0,0,0,0.45);
+    transition:.25s ease;
+}
+
+.form-field:hover{
+    border-color:#2b5872;
+    transform:translateY(-2px);
+}
+
+.fb-page .form-field label{
+    display:block;
+    font-size:15px;
+    font-weight:600;
+    margin-bottom:10px;
+    color:#e6f2ff;
+    letter-spacing:.3px;
+}
+
+.fb-page .form-field input{
+    height:48px;
+    width:93%;
+    background:#071923;
+    border:1px solid #1f3a4f;
+    border-radius:10px;
+    padding:0 14px;
+    color:#cfe9ff;
+    font-size:14px;
+    outline:none;
+    transition:.2s;
+}
+
+.fb-page .form-field input:focus{
+    border-color:#1f8fff;
+    box-shadow:0 0 0 2px rgba(31,143,255,.25);
+}
+
+
+.fb-page .bottom-actions{
+    text-align:right;
+    margin-top:14px;
+}
+.fb-page .bottom-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+    margin-top:10px;
+}
+
+.fb-page .bottom-actions button{
+    height:42px;
+    padding:0 22px;
+    border-radius:10px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.fb-page .bottom-actions button:first-child{
+    background:#132b3a;
+    color:#cfe3f5;
+}
+
+.fb-page .bottom-actions button:last-child{
+    background:#1f8fff;
+    color:white;
+}
+
+.fb-page .bottom-actions button:hover{
+    transform:translateY(-2px);
+}
+
+.fb-page .field-actions{
+    position:absolute;
+    top:14px;
+    right:16px;
+    display:flex;
+    gap:8px;
+}
+
+
+/* Make them small & minimal */
+.fb-page .field-actions span{
+    width:24px;
+    height:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:transparent;
+
+    font-size:12px;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.fb-page .field-actions span:hover{
+    background:#1f8fff;
+    border-color:#1f8fff;
+    color:white;
+}
+
+
+.fb-page .field-actions span:hover{
+    background:#1f8fff;
+}
+
+
+/* ========== RIGHT ========== */
+.fb-page .setting input{
+    width:100%;
+    height:38px;
+    border-radius:8px;
+    border:1px solid #1f3a4f;
+    background:#0b1720;
+    color:white;
+    padding:0 10px;
+    margin-top:6px;
+}
+
+.fb-page .status-active{
+    margin-top:16px;
+    background:#0a3a24;
+    padding:10px;
+    border-radius:8px;
+    text-align:center;
+    color:#66ffb2;
+}
+.fb-page .saas-container{
+    max-width:1380px;
+    margin:0 auto;
+}
+.fb-page .saas-grid{
+    display:grid;
+    grid-template-columns:280px 1fr 360px;
+    gap:24px;
+}
+.fb-page .saas-card{
+    background:#0f2230;
+    border:1px solid #1f3a4f;
+    border-radius:14px;
+    padding:20px;
+    height:640px;
+    overflow:auto;
+}
+.fb-page .saas-input{
+    height:40px;
+    border-radius:8px;
+}
+.fb-page .saas-btn{
+    height:40px;
+    border-radius:8px;
+}
+.fb-page .settings-card{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.fb-page .settings-title{
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:6px;
+}
+
+.fb-page .sub-title{
+    font-size:14px;
+    opacity:.8;
+    margin-top:4px;
+}
+
+.fb-page .setting-group{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.fb-page .setting-group label{
+    font-size:13px;
+    opacity:.7;
+}
+
+.fb-page .setting-group input{
+    height:46px;
+    padding:0 14px;
+    background:#0b1f2b;
+    border:1px solid #1f3a4f;
+    border-radius:10px;
+    color:#e6f2ff;
+    outline:none;
+    transition:.2s;
+}
+
+.fb-page .setting-group input:focus{
+    border-color:#1f8fff;
+    box-shadow:0 0 0 2px rgba(31,143,255,0.25);
+}
+
+.fb-page .divider{
+    height:1px;
+    background:#1c3344;
+    margin:6px 0;
+}
+
+.fb-page .toggle-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:4px;
+}
+
+/* SaaS status badge */
+.fb-page .status-badge{
+    margin-top:10px;
+    background:#0d2f22;
+    border:1px solid #1f5e46;
+    color:#6affc3;
+    height:44px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:600;
+    gap:8px;
+}
+
+.fb-page .status-badge .dot{
+    width:8px;
+    height:8px;
+    background:#35ffb6;
+    border-radius:50%;
+}
+
+
+</style>
+
+<!-- HEADER -->
+<div class="builder-header">
+    <h2>{{ app_name }} Form Builder</h2>
+    <div class="builder-actions">
+        <button>Actions ▾</button>
+        <button class="save" onclick="saveForm()">Save</button>
+        <button>⚙</button>
+    </div>
+</div>
+
+<div class="builder-layout">
+
+    <!-- LEFT PANEL -->
+    <div class="card">
+        <div class="tabs">
+            <span class="active">Basic Fields</span>
+            <span>All</span>
+        </div>
+
+        <input class="elements-search" placeholder="Search input...">
+
+        <!-- DRAGGABLE ITEMS -->
+        <div class="field-item" draggable="true" ondragstart="dragField(event,'text')">📝 Short Text</div>
+        <div class="field-item" draggable="true" ondragstart="dragField(event,'textarea')">📄 Long Text</div>
+        <div class="field-item" draggable="true" ondragstart="dragField(event,'email')">✉️ Email</div>
+        <div class="field-item" draggable="true" ondragstart="dragField(event,'number')">🔢 Number</div>
+        <div class="field-item" draggable="true" ondragstart="dragField(event,'date')">📅 Date</div>
+    </div>
+
+    <!-- CENTER DROP ZONE -->
+    <div class="card" id="dropZone"
+         ondragover="allowDrop(event)"
+         ondrop="dropField(event)">
+
+        <div class="helper">Drag new fields from the left panel</div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="card settings-card">
+
+        <h3 class="settings-title">Form Settings</h3>
+
+        <div class="setting-group">
+            <label>Redirect on Submit</label>
+            <input placeholder="Enter URL">
+        </div>
+
+        <div class="setting-group">
+            <label>Confirmation Message</label>
+            <input value="Thank you! Your submission has been received.">
+        </div>
+
+        <div class="divider"></div>
+
+        <h4 class="sub-title">Email Notifications</h4>
+
+        <div class="setting-group">
+            <label>Admin Email</label>
+            <input value="admin@example.com">
+        </div>
+
+        <div class="status-badge">
+            <span class="dot"></span> Form is Active
+        </div>
+
+    </div>
+
+</div>
+    </div>
+<script>
+let formFields = [];
+
+/* ---------------- DRAG DROP ---------------- */
+
+function allowDrop(ev){
+    ev.preventDefault();
+}
+
+function dragField(ev, type){
+    ev.dataTransfer.setData("type", type);
+}
+
+function dropField(ev){
+    ev.preventDefault();
+    const type = ev.dataTransfer.getData("type");
+
+   const field = {
+    label: getLabel(type),
+    name: getLabel(type).toLowerCase().replace(/\s+/g, "_"),
+    type: type,
+    placeholder: getPlaceholder(type)
+};
+
+
+    formFields.push(field);
+    renderFields();
+}
+
+/* ---------------- HELPERS ---------------- */
+
+function getLabel(type){
+    if(type==='text') return "Short Text";
+    if(type==='textarea') return "Long Text";
+    if(type==='email') return "Email Address";
+    if(type==='number') return "Number";
+    if(type==='date') return "Date";
+}
+
+function getPlaceholder(type){
+    if(type==='text') return "Enter text";
+    if(type==='textarea') return "Enter long text";
+    if(type==='email') return "Enter email";
+    if(type==='number') return "Enter number";
+    if(type==='date') return "";
+}
+
+/* ---------------- RENDER ---------------- */
+
+function renderFields(){
+    const dz = document.getElementById("dropZone");
+    dz.innerHTML = '<div class="helper">Drag new fields from the left panel</div>';
+
+    formFields.forEach((f, i)=>{
+        dz.innerHTML += `
+        <div class="form-field">
+
+            <div class="field-header">
+                <label contenteditable="true"
+                       oninput="editLabel(${i}, this.innerText)">
+                       ${f.label} <span>(${f.type})</span>
+                </label>
+
+                <div class="field-actions">
+                    <i class="fa-solid fa-trash"
+                       onclick="deleteField(${i})"></i>
+                </div>
+            </div>
+
+            <input type="${f.type}"
+                   placeholder="${f.placeholder}"
+                   oninput="editPlaceholder(${i}, this.value)">
+        </div>
+        `;
+    });
+}
+
+/* ---------------- EDIT ---------------- */
+
+function editLabel(index, value){
+    formFields[index].label = value.replace(/\(.+\)/, '').trim();
+}
+
+function editPlaceholder(index, value){
+    formFields[index].placeholder = value;
+}
+
+function deleteField(index){
+    formFields.splice(index,1);
+    renderFields();
+}
+
+/* ---------------- SAVE TO FLASK ---------------- */
+function saveForm(){
+
+    fetch("/save_form_builder", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            app_name: "{{ app_name }}",
+            fields: formFields
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.status === "saved"){
+            alert("✅ Form saved successfully\n\nAPI KEY: " + data.api_key);
+
+            // redirect to integration page
+            window.location.href = "/integration";
+        }else{
+            alert("❌ Error saving form");
+        }
+
+    })
+    .catch(err => {
+        alert("Server Error");
+        console.log(err);
+    });
+
+}
+
+
+/* attach to SAVE button */
+document.querySelector(".save").onclick = function () {
+
+    fetch("/save_form_builder", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            app_name: "{{ app_name }}",
+            fields: formFields
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert("Form Saved Successfully!\n\nAPI KEY: " + data.api_key);
+
+        // redirect to integration page
+        window.location.href = "/integration";
+    });
+
+};
+</script>
+
+
+{% endblock %}

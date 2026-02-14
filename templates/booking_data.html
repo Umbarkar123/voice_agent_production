@@ -1,0 +1,308 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="saas-container">
+
+    <!-- PAGE HEADER -->
+    <div class="page-head">
+        <div>
+            <h1>Booking Management</h1>
+            <p>Review and manage booking requests from your applications</p>
+        </div>
+
+        <div class="head-actions">
+            <select id="appFilter" onchange="filterByApp(this.value)">
+                <option value="">All Applications</option>
+                {% for a in apps %}
+                <option value="{{a}}">{{a}}</option>
+                {% endfor %}
+            </select>
+
+            <button onclick="exportCSV()">Export CSV</button>
+        </div>
+    </div>
+
+
+    <!-- KPI ROW -->
+   <div class="stats-row">
+
+    <div class="stat-box">
+        <span>Total</span>
+        <h2 id="stat-total">{{total}}</h2>
+    </div>
+
+    <div class="stat-box">
+        <span>Approved</span>
+        <h2 id="stat-approved">{{approved}}</h2>
+    </div>
+
+    <div class="stat-box">
+        <span>Rejected</span>
+        <h2 id="stat-rejected">{{rejected}}</h2>
+    </div>
+
+    <div class="stat-box">
+        <span>Pending</span>
+        <h2 id="stat-pending">{{pending}}</h2>
+    </div>
+
+</div>
+
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+        <table class="saas-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Phone</th>
+                    <th>Application</th>
+                    <th>Query</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+            {% for row in data %}
+                <tr data-id="{{row._id}}" data-app="{{row.app_name}}">
+
+                    <td>{{row.name}}</td>
+                    <td>{{row.phone}}</td>
+                    <td>{{row.app_name}}</td>
+                    <td>{{row.query}}</td>
+                    <td>{{row.time}}</td>
+                    <td>
+                        <span class="badge {{row.status}}">
+                            {{row.status}}
+                        </span>
+                    </td>
+                <td class="actions">
+    {% if row.status == "PENDING" %}
+        <a href="/approve/{{row._id|string}}" class="icon-btn ok">✓</a>
+        <a href="/reject/{{row._id|string}}" class="icon-btn no">✕</a>
+    {% endif %}
+</td>
+
+
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
+<style>
+/* ===== SAAS PAGE LAYOUT ===== */
+
+.saas-container{
+    max-width:1200px;
+    margin:40px auto;
+}
+
+/* HEADER */
+.page-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:30px;
+}
+
+.page-head h1{
+    font-size:26px;
+    font-weight:600;
+    margin:0;
+}
+
+.page-head p{
+    margin-top:6px;
+    font-size:14px;
+    color:#94a3b8;
+}
+
+.head-actions{
+    display:flex;
+    gap:12px;
+}
+
+.head-actions select,
+.head-actions button{
+    height:36px;
+    padding:0 14px;
+    border-radius:6px;
+    border:1px solid #1e293b;
+    background:#0f172a;
+    color:#e2e8f0;
+    font-size:13px;
+}
+
+/* KPI */
+.stats-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:18px;
+    margin-bottom:28px;
+}
+
+.stat-box{
+    background:#0f172a;
+    border:1px solid #1e293b;
+    border-radius:10px;
+    padding:18px;
+}
+
+.stat-box span{
+    font-size:13px;
+    color:#94a3b8;
+}
+
+.stat-box h2{
+    margin-top:8px;
+    font-weight:600;
+}
+
+/* TABLE */
+.table-wrapper{
+    background:#0f172a;
+    border:1px solid #1e293b;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.saas-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+}
+
+.saas-table thead{
+    background:#0b1220;
+}
+
+.saas-table th{
+    text-align:left;
+    padding:14px 18px;
+    font-weight:600;
+    color:#94a3b8;
+    font-size:13px;
+}
+
+.saas-table td{
+    padding:16px 18px;
+    border-top:1px solid #1e293b;
+}
+
+.saas-table tbody tr:hover{
+    background:#0b1220;
+}
+
+/* STATUS BADGE */
+.badge{
+    padding:4px 10px;
+    border-radius:4px;
+    font-size:12px;
+    font-weight:600;
+}
+
+.badge.PENDING{ background:#facc15; color:#000; }
+.badge.APPROVED{ background:#22c55e; }
+.badge.REJECTED{ background:#ef4444; }
+
+/* ACTIONS */
+.actions{
+    text-align:right;
+}
+
+.icon-btn{
+    padding:6px 10px;
+    border-radius:6px;
+    margin-left:6px;
+    text-decoration:none;
+    font-weight:600;
+}
+
+.icon-btn.ok{ background:#22c55e; color:white; }
+.icon-btn.no{ background:#ef4444; color:white; }
+</style>
+<script>
+
+function updateStatus(id, status){
+
+    fetch("/client/update_booking_status",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+            id: id,
+            status: status
+        })
+    })
+    .then(res=>res.json())
+    .then(res=>{
+        if(res.success){
+            // 🔁 update UI without reload
+            const row = document.querySelector(`[data-id="${id}"]`)
+            const badge = row.querySelector(".badge")
+
+            badge.className = "badge " + status
+            badge.innerText = status
+
+            row.querySelector(".actions").innerHTML = ""
+
+            updateStats(status)
+
+        }else{
+            alert("Error updating")
+        }
+    })
+}
+
+function updateStats(status){
+
+    let total = parseInt(document.getElementById("stat-total").innerText)
+    let approved = parseInt(document.getElementById("stat-approved").innerText)
+    let rejected = parseInt(document.getElementById("stat-rejected").innerText)
+    let pending = parseInt(document.getElementById("stat-pending").innerText)
+
+    pending--
+
+    if(status === "APPROVED") approved++
+    if(status === "REJECTED") rejected++
+
+    document.getElementById("stat-approved").innerText = approved
+    document.getElementById("stat-rejected").innerText = rejected
+    document.getElementById("stat-pending").innerText = pending
+}
+
+
+function filterByApp(app){
+    let rows = document.querySelectorAll("tbody tr");
+
+    rows.forEach(row => {
+        let rowApp = row.getAttribute("data-app");
+
+        // show all if empty
+        if(app === "" || app === "All"){
+            row.style.display = "";
+        }
+        else if(rowApp === app){
+            row.style.display = "";
+        }
+        else{
+            row.style.display = "none";
+        }
+    });
+}
+
+</script>
+
+
+
+{% endblock %}
+
+

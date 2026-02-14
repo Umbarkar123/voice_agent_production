@@ -1,0 +1,194 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Call History</h1>
+    <p style="color:#9aa4b2">All user call requests received by your system</p>
+</div>
+
+<!-- ===== FILTER TABS + SEARCH ===== -->
+<div class="top-controls">
+    <div class="tabs">
+        <button class="tab active" onclick="filterStatus('')">All</button>
+        <button class="tab" onclick="filterStatus('PENDING')">Pending</button>
+        <button class="tab" onclick="filterStatus('APPROVED')">Approved</button>
+        <button class="tab" onclick="filterStatus('REJECTED')">Rejected</button>
+    </div>
+
+    <div class="calls-search">
+        <input type="text" id="callSearch" placeholder="Search by name or phone...">
+    </div>
+</div>
+
+<!-- ===== TABLE CARD ===== -->
+<div class="card table-card">
+    <h2>User Call Requests</h2>
+
+    <table class="styled-table" id="dataTable">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Phone</th>
+                <th>Requested Time</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th style="text-align:right">Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for call in calls %}
+            <tr class="{{ call.status }}">
+                <td>{{ call.name }}</td>
+                <td>{{ call.phone }}</td>
+                <td>{{ call.time }}</td>
+                <td><span class="status {{ call.status }}">{{ call.status }}</span></td>
+                <td>{{ call.createdAt }}</td>
+                <td style="text-align:right">
+                    <a href="/call/{{ call._id }}" class="btn-view">👁 View</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+/* ===== SAME SAAS THEME AS DASHBOARD ===== */
+
+.top-controls{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:6px 0 12px 0;
+}
+
+/* Tabs */
+.tabs{ display:flex; gap:10px; }
+
+.tab{
+    padding:8px 14px;
+    border-radius:8px;
+    background:linear-gradient(145deg,#0e2230,#0b1720);
+    border:1px solid #1e3a4c;
+    color:#cbd5e1;
+    cursor:pointer;
+    font-size:13px;
+}
+.tab.active{
+    background:#facc15;
+    color:#000;
+    border:none;
+}
+
+/* Search */
+.calls-search input{
+    width:260px;
+    padding:8px 12px;
+    border-radius:8px;
+    border:1px solid #1e3a4c;
+    background:linear-gradient(145deg,#0e2230,#0b1720);
+    color:#e2e8f0;
+    font-size:13px;
+}
+.calls-search input:focus{
+    border:1px solid #38bdf8;
+    outline:none;
+}
+
+/* ===== CARD SAME AS DASHBOARD BLOCK ===== */
+.table-card{
+    margin-top:10px;
+    border-radius:14px;
+    padding:22px;
+    background:linear-gradient(145deg,#0f2532,#0b1720);
+    border:1px solid #1e3a4c;
+    box-shadow:0 10px 30px rgba(0,0,0,0.35);
+}
+
+/* ===== TABLE SAME AS USER FORM REQUESTS ===== */
+.styled-table{
+    width:100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.styled-table th{
+    background:rgba(255,255,255,0.03);
+    color:#94a3b8;
+    font-weight:600;
+    font-size:12px;
+    letter-spacing:0.5px;
+}
+
+.styled-table th,
+.styled-table td{
+    padding:14px 12px;
+    border-bottom:1px solid #1e3a4c;
+    font-size:13px;
+    color:#e2e8f0;
+}
+
+.styled-table tbody tr:hover{
+    background:rgba(56,189,248,0.06);
+}
+
+/* column widths */
+.styled-table th:nth-child(1),
+.styled-table td:nth-child(1){ width:20%; }
+
+.styled-table th:nth-child(2),
+.styled-table td:nth-child(2){ width:18%; }
+
+.styled-table th:nth-child(3),
+.styled-table td:nth-child(3){ width:16%; }
+
+.styled-table th:nth-child(4),
+.styled-table td:nth-child(4){ width:14%; }
+
+.styled-table th:nth-child(5),
+.styled-table td:nth-child(5){ width:20%; }
+
+.styled-table th:nth-child(6),
+.styled-table td:nth-child(6){ width:12%; text-align:right; }
+
+/* STATUS BADGES — same colors */
+.status{
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:600;
+}
+
+.status.APPROVED{
+    background:#22c55e;
+    color:white;
+}
+
+.status.PE
+
+
+</style>
+
+<script>
+// Status filter
+function filterStatus(status){
+    document.querySelectorAll("#dataTable tbody tr").forEach(row=>{
+        row.style.display =
+            (status === "" || row.className === status) ? "" : "none";
+    });
+
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    event.target.classList.add("active");
+}
+
+// Search filter
+document.getElementById("callSearch").addEventListener("keyup", function(){
+    let value = this.value.toLowerCase();
+    document.querySelectorAll("#dataTable tbody tr").forEach(row=>{
+        row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
+    });
+});
+</script>
+
+{% endblock %}

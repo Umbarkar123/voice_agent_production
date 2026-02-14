@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="page-header">
+    <h1>System Analytics</h1>
+    <p>Complete performance overview of entire platform</p>
+</div>
+
+<!-- ===== KPI ROW ===== -->
+<div class="kpi-container">
+    <div class="kpi"><h3>Total Calls</h3><p>{{ total_calls }}</p></div>
+    <div class="kpi"><h3>Pending</h3><p>{{ pending }}</p></div>
+    <div class="kpi"><h3>Approved</h3><p>{{ approved }}</p></div>
+    <div class="kpi"><h3>Rejected</h3><p>{{ rejected }}</p></div>
+</div>
+
+<!-- ===== CALL STATUS + TOP CLIENTS (SIDE BY SIDE) ===== -->
+<div class="analytics-grid">
+
+    <!-- Calls by Status -->
+    <div style="margin-top:20px;" class="card full">
+        <div class="card-header"><h2>Calls by Status</h2></div>
+        <table class="calls-table compact">
+            <thead>
+                <tr><th>Status</th><th>Count</th></tr>
+            </thead>
+            <tbody>
+            {% for s in status_data %}
+                <tr>
+                    <td>{{ s.status }}</td>
+                    <td>{{ s.count }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Top Clients -->
+   <div style="margin-top:20px;" class="card full">
+        <div class="card-header"><h2>Top Performing Clients</h2></div>
+        <table class="calls-table compact">
+            <thead>
+                <tr>
+                    <th>Client ID</th>
+                    <th>Total</th>
+                    <th>Approved</th>
+                    <th>Pending</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for c in top_clients %}
+                <tr>
+                    <td>{{ c._id }}</td>
+                    <td>{{ c.total }}</td>
+                    <td>{{ c.approved }}</td>
+                    <td>{{ c.pending }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
+<!-- ===== CALLS PER DAY ===== -->
+<div style="margin-top:20px;" class="card full">
+    <div class="card-header"><h2>Calls Per Day (Last 7 Days)</h2></div>
+    <table class="calls-table compact">
+        <thead>
+            <tr><th>Date</th><th>Calls</th></tr>
+        </thead>
+        <tbody>
+        {% for d in calls_per_day %}
+            <tr>
+                <td>{{ d._id }}</td>
+                <td>{{ d.count }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ===== RECENT ACTIVITY ===== -->
+<div style="margin-top:20px;" class="card full">
+
+    <div class="card-header"><h2>Recent Activity</h2></div>
+    <table class="calls-table compact">
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in recent %}
+            <tr>
+                <td>{{ r.name }}</td>
+                <td>{{ r.phone }}</td>
+                <td>
+                    <span class="badge {{ r.status|lower }}">{{ r.status }}</span>
+                </td>
+                <td>{{ r.createdAt }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

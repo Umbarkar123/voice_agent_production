@@ -1,0 +1,428 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="dash-wrap">
+
+<h2 class="dash-title">{{ app_name }} Application Dashboard</h2>
+
+<!-- KPI -->
+<div class="kpi-grid">
+    <div class="kpi">
+        <div>Status</div>
+        <strong><span class="dot"></span> Active</strong>
+    </div>
+    <div class="kpi">
+        <div>Total Submissions</div>
+        <strong>{{ submissions }}</strong>
+    </div>
+    <div class="kpi">
+        <div>Last Submission</div>
+        <strong>Today</strong>
+    </div>
+    <div class="kpi">
+        <div>Conversion</div>
+        <strong>82%</strong>
+    </div>
+</div>
+
+<!-- ACTIONS -->
+<div class="actions">
+    <a href="/client/application/{{app_name}}" class="btn primary">Edit Form</a>
+ <a href="/client/application/{{app_name}}/preview"
+       target="_blank"
+       class="action-btn">
+       Preview
+    </a>
+    <a href="/client/application/{{app_name}}/submissions"
+       class="action-btn">
+       Submissions
+    </a>
+
+  <button class="action-btn" onclick="copyLink('{{app_name}}')">
+    Copy Link
+</button>
+
+
+    <a href="/client/application/{{app_name}}/settings" class="action-btn">Settings</a>
+
+    <a href="#" class="btn danger">Delete</a>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+
+    <!-- GRAPH -->
+    <div class="card graph">
+        <div class="card-head">
+            <h3>Analytics Overview</h3>
+            <select>
+                <option>Last 7 Days</option>
+            </select>
+        </div>
+        <canvas id="chart"></canvas>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="card insights">
+        <h3>Quick Insights</h3>
+        <ul>
+            <li>Peak day: <b>Saturday</b></li>
+            <li>Avg daily submissions: <b>8</b></li>
+            <li>Most used field: <b>Email</b></li>
+            <li>Drop rate: <b>12%</b></li>
+        </ul>
+    </div>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+<!--new Chart(document.getElementById('chart'), {-->
+<!--    type: 'line',-->
+<!--    data: {-->
+<!--        labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],-->
+<!--        datasets: [{-->
+<!--            data: [2,5,10,4,15,28,16],-->
+<!--            borderColor:'#4da3ff',-->
+<!--            backgroundColor:'rgba(77,163,255,0.12)',-->
+<!--            fill:true,-->
+<!--            tension:.4-->
+<!--        }]-->
+<!--    },-->
+<!--    options:{-->
+<!--        plugins:{legend:{display:false}},-->
+<!--        scales:{-->
+<!--            x:{grid:{display:false}},-->
+<!--            y:{grid:{color:'#1c3344'}}-->
+<!--        }-->
+<!--    }-->
+<!--});-->
+new Chart(document.getElementById('chart'), {
+    type: 'line',
+    data: {
+        labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+        datasets: [{
+            data: [2,5,10,4,15,28,16],
+            fill: true,
+            borderColor: '#1f8fff',
+            backgroundColor: 'rgba(31,143,255,0.15)',
+            tension: 0.4
+        }]
+    },
+    options: {
+    responsive: true,
+    maintainAspectRatio: false,   // ⭐ IMPORTANT
+
+    layout: {
+        padding: {
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0
+        }
+    },
+
+    plugins: {
+        legend: { display: false }
+    },
+
+    scales: {
+        x: {
+            grid: { color: '#1c3344' },
+            ticks: { color: '#9fb3c8' },
+            border: { display: false }
+        },
+        y: {
+            grid: { color: '#1c3344' },
+            ticks: { color: '#9fb3c8' },
+            border: { display: false }
+        }
+    }
+}
+
+});
+
+function copyLink(appName){
+
+    // build public form URL
+    const baseUrl = window.location.origin;
+    const formUrl = baseUrl + "/form/" + appName;
+
+    // copy to clipboard
+    navigator.clipboard.writeText(formUrl)
+    .then(() => {
+        showToast("🔗 Link copied to clipboard!");
+    })
+    .catch(() => {
+        alert("Link: " + formUrl); // fallback
+    });
+}
+</script>
+
+
+
+
+<style>
+.dash-wrap{
+    width:100%;
+    padding:0 14px;
+    font-family:'Segoe UI',sans-serif;
+}
+
+/* TITLE */
+.dash-title{
+    margin-bottom:18px;
+    font-weight:600;
+    font-size:20px;
+}
+
+/* KPI */
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-bottom:16px;
+}
+.kpi{
+    background:#0f2230;
+    border:1px solid #1c3344;
+    padding:16px;
+    border-radius:8px;
+}
+.kpi div{
+    font-size:12px;
+    opacity:.6;
+}
+.kpi strong{
+    font-size:18px;
+    font-weight:600;
+}
+
+.dot{
+    height:8px;
+    width:8px;
+    background:#00c776;
+    border-radius:50%;
+    display:inline-block;
+    margin-right:6px;
+}
+
+/* BUTTONS */
+.actions{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+.btn{
+    height:36px;
+    padding:0 16px;
+    border-radius:6px;
+    border:1px solid #1c3344;
+    background:#132b3a;
+    display:flex;
+    align-items:center;
+    font-size:13px;
+    color:white;
+    text-decoration:none;
+}
+.btn.primary{background:#1f8fff}
+.btn.danger{color:#ff6b6b}
+
+/* GRID */
+.main-grid{
+    display:grid;
+    grid-template-columns:3fr 1.2fr;
+    gap:18px;
+}
+
+/* CARD */
+.card{
+    background:#0f2230;
+    border:1px solid #1c3344;
+    border-radius:8px;
+    padding:18px;
+}
+
+/* GRAPH */
+.graph canvas{
+    height:260px !important;
+}
+.card-head{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
+}
+.card-head select{
+    height:30px;
+    border-radius:6px;
+    background:#132b3a;
+    border:1px solid #1c3344;
+    color:white;
+    padding:0 8px;
+}
+
+/* INSIGHTS */
+.insights ul{
+    padding-left:18px;
+}
+.insights li{
+    padding:8px 0;
+    font-size:14px;
+}
+/* ===== FLAT SaaS CARDS (no glow, no yellow) ===== */
+
+.card,
+.kpi,
+.stat-card,
+.chart-card,
+.settings-card {
+   background:#0f2230;
+    border:1px solid #1f3a4f;   /* only border, no yellow */
+    border-radius:12px;
+    padding:18px 22px;        /* remove glow */
+}
+.stat-card{
+    border-left: none !important;
+}
+.stat-card::before{
+    display:none !important;
+}
+
+/* remove any gradient backgrounds */
+[class*="card"],
+[class*="kpi"],
+[class*="stat"]{
+    background-image:none !important;
+}
+
+/* headings */
+.card h3,
+.stat-card h3{
+    font-weight:600;
+    font-size:16px;
+}
+
+/* buttons simple */
+.btn,
+.action-btn{
+    background:#132b3a !important;
+    border:1px solid #1c3344 !important;
+    color:#fff;
+    border-radius:6px;
+    box-shadow:none !important;
+}
+
+.btn.primary{
+    background:#1f8fff !important;
+}
+
+.btn:hover,
+.action-btn:hover{
+    background:#163346 !important;
+}
+
+/* chart container */
+.chart-card{
+    padding:18px;
+}
+
+/* remove any highlight/glow effects */
+*{
+    text-shadow:none !important;
+    filter:none !important;
+}
+/* ===== REMOVE ALL YELLOW / GLOW / HIGHLIGHT EFFECTS ===== */
+
+.card,
+.kpi,
+.stat-card,
+.chart-card,
+.settings-card{
+    background:#0f2230 !important;
+    border:1px solid #1c3344 !important;
+    box-shadow:none !important;
+    background-image:none !important;
+}
+
+/* remove left yellow strip / before elements */
+.card::before,
+.kpi::before,
+.stat-card::before{
+    display:none !important;
+    content:none !important;
+}
+
+/* remove hover glow from layout.css */
+.card:hover,
+.kpi:hover{
+    box-shadow:none !important;
+    border-color:#1c3344 !important;
+    transform:translateY(-3px);   /* simple move effect only */
+    transition:0.2s ease;
+}
+
+/* remove any gradient or highlight borders */
+*{
+    text-shadow:none !important;
+    filter:none !important;
+}
+.graph{
+    height: 300px;   /* give chart real height */
+}
+
+.graph canvas{
+    width:100% !important;
+    height:80% !important;
+}
+.action-buttons{
+    display:flex;
+    gap:10px;
+    margin:18px 0;
+    flex-wrap:wrap;
+}
+
+/* common buttons */
+.action-btn{
+    padding:8px 16px;
+    border-radius:8px;
+    background:#132b3a;
+    border:1px solid #1c3344;
+    color:#fff;
+    font-size:13px;
+    font-weight:500;
+    text-decoration:none;
+    cursor:pointer;
+    transition:all .2s ease;
+}
+
+.action-btn:hover{
+    background:#163346;
+    border-color:#1f8fff;
+}
+
+/* ONLY Edit Form button */
+.action-btn.primary{
+    background:linear-gradient(135deg,#1f8fff,#2da2ff);
+    border:none;
+    color:#fff;
+    font-weight:600;
+}
+
+/* delete button */
+.action-btn.danger{
+    background:#2a0f14;
+    border:1px solid #5a1a25;
+    color:#ff6b6b;
+}
+
+.action-btn.danger:hover{
+    background:#3a141c;
+    color:#ff8b8b;
+}
+
+
+</style>
+
+{% endblock %}
