@@ -31,25 +31,25 @@ load_dotenv()
 
 # create flask app
 app = Flask(__name__)
-
-# secret key
-app.secret_key = os.getenv("SECRET_KEY")
-
-# mongo config from .env
-app.config["MONGO_URI"] = os.getenv("MONGO_URI")
-
-# initialize mongo
-mongo = PyMongo(app)
-
+CORS(app)
 
 # Load configuration from environment variables
+# configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/voice_agent_db")
 RETELL_WEBHOOK = os.getenv("RETELL_WEBHOOK_URL")
 FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "dev_secret_key")
+
+app.secret_key = FLASK_SECRET_KEY
+app.config["MONGO_URI"] = MONGO_URI
+
+# initialize mongo
+mongo = PyMongo(app)
+client = MongoClient(MONGO_URI)
+db = client.get_database() # Automatically picks up DB name from URI
 
 if not OPENAI_API_KEY:
     logger.warning("OPENAI_API_KEY is not set. AI features may not work.")
@@ -80,8 +80,6 @@ def call_llm(prompt_text, form_data):
         return "Error processing request."
 
 # ------------------ DB ------------------
-client = MongoClient(MONGO_URI)
-db = client["voice_agent_db"]
 collection = db["call_requests"]
 print("DB NAME:", db.name)
 
@@ -90,13 +88,8 @@ api_col = db["api_keys"]
 form_col = db["form_fields"]
 
 
-
-
-# ------------------ APP ------------------
-app = Flask(__name__)
-app.secret_key = FLASK_SECRET_KEY
+# ------------------ APP CONFIG ------------------
 user_col = db["user"]
-CORS(app)
 
 # ------------------ TWILIO CONFIG ------------------
 if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
@@ -1301,7 +1294,7 @@ def api_submit(api_key):
     try:
         import openai
 
-        openai.api_key = "YOUR_OPENAI_API_KEY"   # ⚠️ put your key here
+        openai.api_key = OPENAI_API_KEY
 
         response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
