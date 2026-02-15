@@ -1648,6 +1648,10 @@ def download_html(app_name):
         headers={"Content-Disposition": f"attachment;filename={app_name}.html"}
     )
 
+@app.route("/test-db")
+def test_db():
+    return str(db.list_collection_names())
+
 
 
 
