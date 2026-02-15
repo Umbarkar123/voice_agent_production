@@ -3,13 +3,16 @@ import logging
 import traceback
 import certifi
 import pytz
-from datetime import datetime
+import secrets
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, jsonify, Response, session
 from flask_cors import CORS
 from twilio.rest import Client
 from pymongo import MongoClient
 from openai import OpenAI
 from dotenv import load_dotenv
+from bson import ObjectId
+from uuid import uuid4
 
 
 # 1. SETUP & CONFIG
@@ -227,9 +230,6 @@ def call_summary():
 def ask():
     return jsonify({"message": "Agent testing happens in Retell, not here."})
 
-from flask import session, redirect, url_for
-
-app.secret_key = "supersecretkey"
 #
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -242,24 +242,20 @@ def login():
         if user:
             session["user"] = user["email"]
             session["role"] = user["role"]
-            session["client_id"] = user["client_id"]
-            print("LOGIN CLIENT ID:", user["client_id"])
-
-            session["client_id"] = user.get("client_id")
+            session["client_id"] = str(user.get("client_id", ""))
+            logger.info(f"User login successful: {user['email']}")
             return redirect("/dashboard")
 
-        # 2) Check CLIENT collection
         # 2) Check CLIENT collection
         client = db["clients"].find_one({"email": email, "password": password})
         if client:
             session["user"] = client["email"]
             session["role"] = "CLIENT"
-            session["client_id"] = (client["_id"])
-            # ✅ CORRECT
+            session["client_id"] = str(client["_id"])
+            logger.info(f"Client login successful: {client['email']}")
             return redirect("/analytics")
 
         # 3) Check ADMIN collection
-        # 3) Check ADMIN collection (Super Admin)
         admin = admin_col.find_one({
             "email": email,
             "password": password,
@@ -268,7 +264,9 @@ def login():
         if admin:
             session["user"] = admin["email"]
             session["role"] = "ADMIN"
+            logger.info(f"Admin login successful: {admin['email']}")
             return redirect("/super-dashboard")
+
 
         return render_template("login.html", error="Invalid credentials")
 
@@ -1251,10 +1249,7 @@ def integration_page():
 
 from bson import ObjectId
 
-from bson.objectid import ObjectId
 
-from bson import ObjectId
-from flask import redirect, url_for
 
 # APPROVE
 @app.route("/approve/<id>")
@@ -1275,8 +1270,8 @@ def reject_booking(id):
     )
     return redirect(url_for("booking_data"))
 
-@app.route("/reject/<id>")
-def reject(id):
+@app.route("/reject-submission/<id>")
+def reject_submission(id):
     db.form_submissions.update_one(
         {"_id": ObjectId(id)},
         {"$set": {"status": "REJECTED"}}
@@ -1364,10 +1359,7 @@ def approve_api(id):
 
     return redirect("/calls")
 
-import secrets
-from datetime import datetime
 
-from uuid import uuid4
 
 @app.route("/save_form_builder", methods=["POST"])
 def save_form_builder():
@@ -1411,30 +1403,15 @@ def save_form_builder():
         "api_key": api_key
     })
 
-@app.route("/client/api/<app_name>")
-def api_integration(app_name):
-
-    if "CLIENT_ID" not in session:
-        return redirect("/login")
-
-    client_id = session["CLIENT_ID"]
-
-    form = db.form_builders.find_one({
-        "client_id": client_id,
-        "app_name": app_name
-    })
-
-    return render_template("api_integration.html", form=form)
-
 
 
 @app.route("/client/api/<app_name>")
 def api_page(app_name):
 
-    if "CLIENT_ID" not in session:
+    if "client_id" not in session:
         return redirect("/login")
 
-    client_id = session["CLIENT_ID"]
+    client_id = session["client_id"]
 
     form = db.form_builders.find_one({
         "client_id": client_id,
@@ -1450,7 +1427,7 @@ def api_page(app_name):
 def check_session():
     return str(dict(session))
 
-import secrets
+
 
 @app.route("/regen_key/<app_name>")
 def regen_key(app_name):
@@ -1512,22 +1489,7 @@ def get_llm_prompt(app_name):
     })
 
 
-@app.route("/llm/save/<app_name>", methods=["POST"])
-def save_llm(app_name):
-    data = request.json
 
-    db.llm_settings.update_one(
-        {"app_name": app_name},
-        {"$set": {
-            "app_name": app_name,
-            "default_prompt": data["default_prompt"],
-            "custom_prompt": data["custom_prompt"],
-            "enabled": data["enabled"]
-        }},
-        upsert=True
-    )
-
-    return jsonify({"status":"saved"})
 
 @app.route("/llm/save/<app_name>", methods=["POST"])
 def save_llm_prompt(app_name):
@@ -1552,8 +1514,6 @@ def save_llm_prompt(app_name):
     return jsonify({"status": "saved"})
 
 
-from flask import session, render_template
-from bson import ObjectId
 
 @app.route("/llm-settings")
 def llm_settings():
@@ -1591,7 +1551,7 @@ def llm_settings():
 #     return jsonify({"status": "created"})
 #
 
-from bson.objectid import ObjectId
+
 
 @app.route("/client/update_booking_status", methods=["POST"])
 def update_booking_status():
