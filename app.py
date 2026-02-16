@@ -1349,21 +1349,50 @@ def api_submit(api_key):
     # ==========================================
     # 🔥 STEP 3: SAVE SUBMISSION + AI RESPONSE
     # ==========================================
-    db.form_submissions.insert_one({
+    submission = {
         "client_id": client_id,
         "app_name": app_name,
         "data": data,
         "ai_reply": ai_reply,
         "status": "COMPLETED",
         "created_at": datetime.now()
-    })
+    }
+    result = db.form_submissions.insert_one(submission)
+    call_id = str(result.inserted_id)
 
     # ==========================================
-    # 🔥 STEP 4: RETURN RESPONSE
+    # 🔥 STEP 4: TRIGGER VOICE CALL IF PHONE EXISTS
+    # ==========================================
+    # Look for common phone field names
+    phone_keys = ['phone', 'contact', 'mobile', 'number', 'tel']
+    target_phone = None
+    for k, v in data.items():
+        if k.lower() in phone_keys and v:
+            target_phone = v
+            break
+    
+    if target_phone and twilio_client:
+        try:
+            # Metadata for Retell to fetch dynamic config
+            # Retell will call our /retell-config with these params if configured
+            twilio_client.calls.create(
+                to=target_phone,
+                from_=TWILIO_PHONE_NUMBER,
+                url=f"{RETELL_WEBHOOK}?call_id={call_id}",
+                # Passing metadata via custom parameters if Retell supports it, 
+                # or just as query params in the URL for our own usage
+            )
+            logger.info(f"Triggered automated call for {app_name} to {target_phone}")
+        except Exception as e:
+            logger.error(f"Failed to trigger automated call: {e}")
+
+    # ==========================================
+    # 🔥 STEP 5: RETURN RESPONSE
     # ==========================================
     return jsonify({
         "status": "success",
-        "message": ai_reply
+        "message": ai_reply,
+        "call_id": call_id
     })
 
 @app.route("/api/approve/<id>")
@@ -1441,6 +1470,48 @@ def api_page(app_name):
 
     return render_template("api_integration.html", form=form)
 
+@app.route("/retell-config", methods=["POST"])
+def retell_config():
+    """
+    Called by Retell AI (Dynamic Config) during a call.
+    It receives metadata (client_id, app_name) or call_id and returns the system prompt.
+    """
+    data = request.get_json()
+    metadata = data.get("metadata", {})
+    client_id = metadata.get("client_id")
+    app_name = metadata.get("app_name")
+    
+    # Fallback to call_id lookup if metadata is missing
+    call_id = data.get("call_id") or request.args.get("call_id")
+    
+    if not client_id and call_id:
+        # Check form submissions first
+        sub = db.form_submissions.find_one({"_id": ObjectId(call_id)})
+        if sub:
+            client_id = sub.get("client_id")
+            app_name = sub.get("app_name")
+        else:
+            # Check call requests
+            req = db.call_requests.find_one({"_id": ObjectId(call_id)})
+            if req:
+                client_id = req.get("client_id")
+                app_name = req.get("app_name")
+
+    # Get prompt from consolidated collection
+    settings = db.llm_settings.find_one({
+        "client_id": client_id,
+        "app_name": app_name
+    })
+
+    if settings:
+        system_prompt = settings.get("custom_prompt") or settings.get("default_prompt")
+    else:
+        system_prompt = "You are a professional customer support assistant."
+
+    return jsonify({
+        "agent_prompt": system_prompt
+    })
+
 @app.route("/check-session")
 def check_session():
     return str(dict(session))
@@ -1490,15 +1561,15 @@ def open_form(app_name):
 def get_llm_prompt(app_name):
     client_id = session.get("client_id")
 
-    app = db.applications.find_one({
+    settings = db.llm_settings.find_one({
         "client_id": client_id,
         "app_name": app_name
     })
 
-    if app:
+    if settings:
         return jsonify({
-            "custom_prompt": app.get("custom_prompt", ""),
-            "default_prompt": app.get("default_prompt", "")
+            "custom_prompt": settings.get("custom_prompt", ""),
+            "default_prompt": settings.get("default_prompt", "")
         })
 
     return jsonify({
@@ -1594,7 +1665,7 @@ def update_llm_prompt():
 
     client_id = session.get("client_id")
 
-    db.applications.update_one(
+    db.llm_settings.update_one(
         {
             "client_id": client_id,
             "app_name": app_name
@@ -1602,9 +1673,11 @@ def update_llm_prompt():
         {
             "$set": {
                 "custom_prompt": custom_prompt,
-                "default_prompt": custom_prompt   # 👈 copy same into default
+                "default_prompt": custom_prompt,   # 👈 copy same into default
+                "enabled": True
             }
-        }
+        },
+        upsert=True
     )
 
     return jsonify({"status": "saved"})
