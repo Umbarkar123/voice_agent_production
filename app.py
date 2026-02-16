@@ -1557,6 +1557,7 @@ def open_form(app_name):
         api_key=form.get("api_key")
     )
 
+@app.route("/llm/get/<app_name>")
 @app.route("/get-llm-prompt/<app_name>")
 def get_llm_prompt(app_name):
     client_id = session.get("client_id")
@@ -1580,8 +1581,9 @@ def get_llm_prompt(app_name):
 
 
 
+@app.route("/update-llm-prompt", methods=["POST"])
 @app.route("/llm/save/<app_name>", methods=["POST"])
-def save_llm_prompt(app_name):
+def save_llm_prompt(app_name=None):
     client_id = session.get("client_id")
     data = request.json
 
@@ -1655,32 +1657,6 @@ def update_booking_status():
     )
 
     return jsonify({"success": True})
-
-@app.route("/update-llm-prompt", methods=["POST"])
-def update_llm_prompt():
-    data = request.get_json()
-
-    app_name = data.get("app_name")
-    custom_prompt = data.get("custom_prompt")
-
-    client_id = session.get("client_id")
-
-    db.llm_settings.update_one(
-        {
-            "client_id": client_id,
-            "app_name": app_name
-        },
-        {
-            "$set": {
-                "custom_prompt": custom_prompt,
-                "default_prompt": custom_prompt,   # 👈 copy same into default
-                "enabled": True
-            }
-        },
-        upsert=True
-    )
-
-    return jsonify({"status": "saved"})
 
 @app.route("/api/form/<api_key>")
 def get_form_by_api(api_key):
